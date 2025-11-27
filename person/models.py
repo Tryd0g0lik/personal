@@ -110,3 +110,6 @@ to user's email. User indicates his email at the registrations moment."
         """Check the token"""
         manager = self.get_token_manager()
         return manager.verify_access_token(token_str)
+
+class Role(models.Model):
+    pass

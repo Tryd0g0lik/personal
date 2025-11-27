@@ -10,10 +10,10 @@ from datetime import datetime, timedelta, date
 from django.apps import apps
 from rest_framework_simplejwt.utils import aware_utcnow
 
-User = apps.get_model("person", "User")
+
 
 class CustomAccessToken(AccessToken):
-    def __init__(self, user: Optional[User] | None, token: Token | None = None, verify: bool = True,):
+    def __init__(self, user, token: Token | None = None, verify: bool = True,):
         if token is not None:
             super().__init__(token, verify)
 
@@ -40,7 +40,7 @@ class CustomAccessToken(AccessToken):
         self['jti'] = str(uuid.uuid4())
 
     @classmethod
-    def for_user(cls: type[T], user: User, lifetime: int | None = 86400) -> AccessToken:
+    def for_user(cls: type[T], user, lifetime: int | None = 86400) -> AccessToken:
         """
 
         :param user:

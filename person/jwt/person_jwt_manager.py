@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 from django.apps import apps
 from typing import Optional
 from person.jwt.person_jwt_access_token import CustomAccessToken
-User = apps.get_model("person", "User")
+
 
 class TokenManager:
-    def __init__(self, user: User):
+    def __init__(self, user):
         self.user = user
         self.access_token: Optional[CustomAccessToken] = None
         self.refresh_token: Optional[RefreshToken] = None
