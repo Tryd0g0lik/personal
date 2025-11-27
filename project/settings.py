@@ -13,13 +13,15 @@ import os
 import dotenv
 from pathlib import Path
 from datetime import timedelta
+from django.utils.translation import gettext_lazy as _
+
 dotenv.load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv.load_dotenv()
 IS_DEBUG = os.getenv("IS_DEBUG", "1")
 
-# .env
+# '''' .ENV ''''
 SECRET_KEY_DJ = os.getenv("SECRET_KEY_DJ", "")
 DJANGO_SETTINGS_MODULE = os.getenv("DJANGO_SETTINGS_MODULE", "")
 
@@ -64,6 +66,13 @@ SESSION_COOKIE_HTTPONLY = False  # CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True # change to the True - CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"  # CSRF_COOKIE_SAMESITE = 'Lax'  # or 'Strict'
 SESSION_COOKIE_AGE = 86400
+# ''' CHOICES '''
+AUTHENTIFICATION_STATUS = [
+    ("-------", _("-------")),  # Value by default
+    ("PROCESS", _("Beginning of authentification")),
+    ("ERROR", _("Mistake to the authentification")),
+    ("COMPLETED", _("Completed of authentification")),
+]
 
 DJANGO_ENV = os.environ.get('DJANGO_ENV')
 
@@ -79,8 +88,6 @@ if not SECRET_KEY:
 DEBUG = True if isinstance(IS_DEBUG, str) and int(IS_DEBUG) == 1 else False
 
 # """" HOST """"
-
-
 def get_allowed_hosts(allowed_hosts: str):
     """
     The function is for the securite connection to the allowed hosts
@@ -111,7 +118,7 @@ DATABASES = {
         "PASSWORD": f"{POSTGRES_PASSWORD}",
         "HOST": f"{POSTGRES_HOST}",
         "PORT": f"{POSTGRES_PORT}",
-        "KEY_PREFIX": "drive_",  # it's my prefix for the keys
+        "KEY_PREFIX": "person_",
     }
 }
 # POSTGRES DB TEST
