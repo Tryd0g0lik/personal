@@ -8,7 +8,7 @@ from django.db import models
 
 from person.jwt.person_jwt_manager import TokenManager
 from project.bcoding import DcodeManager
-# Create your models here.
+# Create your models_person here.
 import rest_framework_simplejwt
 from datetime import date, timedelta
 from django.conf import settings

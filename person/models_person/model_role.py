@@ -1,0 +1,61 @@
+from django.core.validators import (MinLengthValidator, RegexValidator, MaxLengthValidator)
+from django.utils.translation import gettext_lazy as _
+from django.db import models
+
+class RoleModel(models.Model):
+    name = models.CharField(max_length=50, unique=True,
+                            validators=[
+                                MinLengthValidator(3), MaxLengthValidator(50),
+                                RegexValidator(regex=r'(^[A-Z][A-Za-z0-9_-]+$)')
+                            ],
+                            help_text=_("The role name. Min 3 & Max 50 characters long.")
+                            )
+    description = models.TextField(blank=True, null=True,
+                                   validators=[
+                                        MaxLengthValidator(150),
+                                       RegexValidator(regex=r'(^[A-Z][\w_ -]+$)')
+                                   ],
+                                   help_text=_("The description of the role. Max 150 characters long.")
+                                   )
+    class Meta:
+        db_table = 'role'
+        unique_together = (('name', 'description'),)
+        verbose_name=_('Role')
+        ordering = ('name',)
+
+    def __str__(self):
+        return "Role: %s" % self.name
+
+
+
+class AccessRolesModel(models.Model):
+    """
+    This is table of roles and permissions
+    """
+    role = models.ForeignKey(RoleModel, on_delete=models.CASCADE, related_name='access_rules', db_column='role_id')
+    element =models.ForeignKey("BusinessElement", on_delete=models.CASCADE, related_name='access_rules',
+                               db_column='element_id', null=True, blank=True)
+
+    read_permission = models.BooleanField(default=False, db_column='read_permission',
+                                          help_text=_("Read only own element"))
+    read_all_permission = models.BooleanField(default=False, db_column='read_all_permission',
+                                              help_text=_("Read all user's elements"))
+    create_permission = models.BooleanField(default=False, db_column='create_permission',
+                                            help_text=_("Create new element"))
+    update_permission = models.BooleanField(default=False, db_column='update_permission',
+                                            help_text=_("Update only own element"))
+    update_all_permission = models.BooleanField(default=False, db_column='update_all_permission',
+                                                help_text=_("Update all user's elements"))
+    delete_permission = models.BooleanField(default=False, db_column='delete_permission',
+                                            help_text=_("Delete only own element"))
+    delete_all_permission = models.BooleanField(default=False, db_column='delete_all_permission',
+                                                help_text=_("Delete all user's elements"))
+    class Meta:
+        db_table = 'access_roles'
+        unique_together = (('role', 'element', 'read_permission',
+                            'update_permission', 'update_all_permission', 'delete_permission'),)
+        verbose_name=_('Access roles')
+        ordering=('role', 'element')
+
+    def __str__(self):
+        return "AccessRole: %s" % self.role

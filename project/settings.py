@@ -355,7 +355,7 @@ CORS_ALLOW_HEADERS = [
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models_person.BigAutoField"
 DEFAULT_CHARSET = "utf-8"
 AUTH_USER_MODEL = "person.User"
 #''''LOGING AUTHENTICATION'''

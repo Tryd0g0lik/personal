@@ -11,7 +11,7 @@
 # from rest_framework.exceptions import AuthenticationFailed
 #
 #
-# from person.models import User
+# from person.models_person import User
 # from typing import Optional, Dict
 # User = apps.get_model("person", "User")
 #
