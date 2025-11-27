@@ -8,6 +8,7 @@ from django.db import models
 
 from person.jwt.person_jwt_manager import TokenManager
 from project.bcoding import DcodeManager
+
 # Create your models_person here.
 import rest_framework_simplejwt
 from datetime import date, timedelta
@@ -27,7 +28,6 @@ class BaseModel(models.Model):
         abstract = True
 
 
-
 class User(BaseModel, AbstractUser):
     """
     :param id it is generate of uuid.uuid4.
@@ -44,11 +44,16 @@ class User(BaseModel, AbstractUser):
 
 
     """
+
     patronymic = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(unique=True)
-    status = models.CharField(default=AUTHENTIFICATION_STATUS[0][0], choices=AUTHENTIFICATION_STATUS, max_length=50, )
+    status = models.CharField(
+        default=AUTHENTIFICATION_STATUS[0][0],
+        choices=AUTHENTIFICATION_STATUS,
+        max_length=50,
+    )
     password = models.CharField(_("password"), max_length=255)
-    role = models.ForeignKey('Role', on_delete=models.PROTECT, related_name='users')
+    role = models.ForeignKey("Role", on_delete=models.PROTECT, related_name="users")
     refer = models.UUIDField(default=uuid.uuid4, editable=False)
     is_sent = models.BooleanField(
         default=False,
@@ -74,8 +79,9 @@ to user's email. User indicates his email at the registrations moment."
     class Meta:
         db_table = "user"
         verbose_name = _("User")
+        unique_together = ("id", ("username", "email"), ("created_at", "updated_at"))
         ordering = [
-            "-id",
+            "firstname",
         ]
         indexes = [models.Index(fields=["is_active"])]
 
@@ -89,13 +95,17 @@ to user's email. User indicates his email at the registrations moment."
         """Checking password"""
         d = DcodeManager()
         salt = str(self.id).encode("utf-8")
-        return bcrypt.checkpw(bcrypt.hashpw(d.str_to_bcode(password), salt), self.password.encode("utf-8"))
+        return bcrypt.checkpw(
+            bcrypt.hashpw(d.str_to_bcode(password), salt), self.password.encode("utf-8")
+        )
 
     def get_token_manager(self) -> Optional[TokenManager]:
         """Gets the manage for token"""
         return TokenManager(self)
 
-    def create_token(self, access_lifetime: int = 86400, refresh_lifetime: int = 864000):
+    def create_token(
+        self, access_lifetime: int = 86400, refresh_lifetime: int = 864000
+    ):
         """
         :param int access_lifetime: seconds - the time of life. It by default value is 86400 seconds.
         :param refresh_lifetime: seconds - the time of the token's refresh. It by default value is 86400 seconds
@@ -104,12 +114,15 @@ to user's email. User indicates his email at the registrations moment."
 
         manager = self.get_token_manager()
 
-        return  manager.create_token(access_lifetime=access_lifetime, refresh_lifetime=refresh_lifetime)
+        return manager.create_token(
+            access_lifetime=access_lifetime, refresh_lifetime=refresh_lifetime
+        )
 
     def verify_token(self, token_str: str) -> bool:
         """Check the token"""
         manager = self.get_token_manager()
         return manager.verify_access_token(token_str)
+
 
 class Role(models.Model):
     pass
