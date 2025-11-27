@@ -97,7 +97,7 @@ def get_allowed_hosts(allowed_hosts: str):
     hosts = [h.strip() for h in hosts if h.strip()]
 
     if DJANGO_ENV == 'production':
-        hosts = [f"{APP_HOST_REMOTE}".strip(), '0.0.0.0', "db",
+        hosts = [f"{APP_HOST_REMOTE}".strip(), "db",
                  "backend",
                  "nginx",
                  "celery",
@@ -355,7 +355,7 @@ CORS_ALLOW_HEADERS = [
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models_person.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_CHARSET = "utf-8"
 AUTH_USER_MODEL = "person.User"
 #''''LOGING AUTHENTICATION'''

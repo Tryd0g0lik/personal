@@ -79,10 +79,7 @@ to user's email. User indicates his email at the registrations moment."
     class Meta:
         db_table = "user"
         verbose_name = _("User")
-        unique_together = ("id", ("username", "email"), ("created_at", "updated_at"))
-        ordering = [
-            "firstname",
-        ]
+
         indexes = [models.Index(fields=["is_active"])]
 
     def set_password(self, password: str) -> None:
