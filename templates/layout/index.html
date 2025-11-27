@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+
+<html lang = "ru" data-ds-theme='dark-theme'>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>{% block title %}{{title}}{% endblock title %} - Page</title>
+    {% block maincssfiles %}
+      <!-- Basic file of style -->
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles/index.css') }}">
+
+    {% endblock maincssfiles %}
+    <!-- Below is an additional files -->
+    {% block mainjsfiles %}
+        {% block cssfiles %} {% endblock cssfiles %}
+      <!--  { % render_bundle 'index' 'js' %}-->
+
+    {% endblock mainjsfiles %}
+
+
+</head>
+<div id="body">
+    <div id="root"></div>
+</div>
+</html>
