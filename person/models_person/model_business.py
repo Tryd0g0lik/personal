@@ -1,3 +1,7 @@
+"""
+person/models_person/model_business.py
+"""
+
 import uuid
 
 from django.core.validators import (

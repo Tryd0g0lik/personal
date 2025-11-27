@@ -1,3 +1,7 @@
+"""
+person/models_person/model_role.py
+"""
+
 from django.core.validators import (
     MinLengthValidator,
     RegexValidator,
