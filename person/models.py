@@ -7,7 +7,12 @@ from typing import Optional
 
 import bcrypt
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, MinLengthValidator
+from django.core.validators import (
+    MinValueValidator,
+    MinLengthValidator,
+    MaxLengthValidator,
+    RegexValidator,
+)
 from django.db import models
 
 from person.jwt.person_jwt_manager import TokenManager
@@ -49,14 +54,30 @@ class User(BaseModel, AbstractUser):
 
     """
 
-    patronymic = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(regex="^(^$|A-Za-z]+$"),
+            MaxLengthValidator(50),
+        ],
+    )
     email = models.EmailField(unique=True)
     status = models.CharField(
         default=AUTHENTIFICATION_STATUS[0][0],
         choices=AUTHENTIFICATION_STATUS,
         max_length=50,
     )
-    password = models.CharField(_("password"), max_length=255)
+    password_hash = models.CharField(
+        _("password"),
+        max_length=255,
+        validators=[
+            MinLengthValidator(6),
+            MaxLengthValidator(255),
+            RegexValidator(regex="[A-Za-z0-9-_%]{6,255)$"),
+        ],
+    )
     role = models.ForeignKey("Role", on_delete=models.PROTECT, related_name="users")
     refer = models.UUIDField(default=uuid.uuid4, editable=False)
     is_sent = models.BooleanField(
