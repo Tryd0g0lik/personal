@@ -42,7 +42,7 @@ class TokenManager:
         Updating the access token wrought  refresh token
         """
         try:
-            refresh = RefreshToken(refresh_token_str)
+            refresh = RefreshToken()
 
 
             if str(refresh['user_id']) != str(self.user.id):
@@ -52,7 +52,7 @@ class TokenManager:
             new_access = CustomAccessToken.for_user(self.user)
 
 
-            refresh.access_token = new_access
+            refresh["access_token"] = new_access
 
             return {
                 'access': str(new_access),

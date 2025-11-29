@@ -214,7 +214,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "project.asgi.application"
+ASGI_APPLICATION = "project.asgi.application"
 
 
 # Database

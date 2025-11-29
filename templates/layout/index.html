@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-
+{% load static %}
 
 <html lang = "ru" data-ds-theme='dark-theme'>
 <head>
@@ -11,15 +11,17 @@
     <title>{% block title %}{{title}}{% endblock title %} - Page</title>
     {% block maincssfiles %}
       <!-- Basic file of style -->
-      <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles/index.css') }}">
+      <link rel="stylesheet" type="text/css" href="{% static 'styles/index.css' %}">
 
     {% endblock maincssfiles %}
     <!-- Below is an additional files -->
-    {% block mainjsfiles %}
-        {% block cssfiles %} {% endblock cssfiles %}
-      <!--  { % render_bundle 'index' 'js' %}-->
+    {% block jsfiles %}
 
-    {% endblock mainjsfiles %}
+        <!-- We have files with the dynamic's name -->
+        {% for file in js_files %}
+            <script src="{% static '/' %}{{file}}"></script>
+        {% endfor %}
+    {% endblock jsfiles %}
 
 
 </head>
