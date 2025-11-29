@@ -16,25 +16,14 @@ from django.core.validators import (
 from django.db import models
 
 from person.jwt.person_jwt_manager import TokenManager
+from person.models_person.model_basic import BaseModel
+from person.models_person.model_role import RoleModel
+
 from project.bcoding import DcodeManager
 
-# Create your models_person here.
-import rest_framework_simplejwt
-from datetime import date, timedelta
-from django.conf import settings
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from project.settings import AUTHENTIFICATION_STATUS
-
-
-class BaseModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateTimeField(_("created_at"), default=timezone.now)
-    updated_at = models.DateTimeField(_("updated_at"), auto_now=True)
-
-    class Meta:
-        abstract = True
 
 
 class User(BaseModel, AbstractUser):
@@ -78,7 +67,7 @@ class User(BaseModel, AbstractUser):
             RegexValidator(regex="[A-Za-z0-9-_%]{6,255)$"),
         ],
     )
-    role = models.ForeignKey("Role", on_delete=models.PROTECT, related_name="users")
+    role = models.ForeignKey(RoleModel, on_delete=models.PROTECT, related_name="users")
     refer = models.UUIDField(default=uuid.uuid4, editable=False)
     is_sent = models.BooleanField(
         default=False,
@@ -144,7 +133,3 @@ to user's email. User indicates his email at the registrations moment."
         """Check the token"""
         manager = self.get_token_manager()
         return manager.verify_access_token(token_str)
-
-
-class Role(models.Model):
-    pass

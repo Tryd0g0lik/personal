@@ -1,11 +1,5 @@
-import json
 import base64
 import logging
-
-# from rest_framework.serializers import ModelSerializer
-from django.db.models import Model, QuerySet
-
-# from typing import Optional, NotRequired, List
 from logs import configure_logging
 
 log = logging.getLogger(__name__)
@@ -61,18 +55,15 @@ class DcodeManager:
             log.error(test_error)
             raise test_error
 
-    def django_object_to_binary(self, element: QuerySet | Model) -> bytes:
-
-        # ===== CHECK DJANGO's MODEL
-        if isinstance(element, Model):
-
-            model_json = json.dumps(element).encode("utf-8")
-            return base64.b64encode(model_json)
-
-        elif isinstance(element, QuerySet):
-            queryset_json = json.dumps(element).encode("utf-8")
-            return base64.b64encode(queryset_json)
-        return None
+    # def django_object_to_binary(self, request: Request,
+    #                             serializers: PersonSerializerList) -> bytes | None:
+    #
+    #     # ===== CHECK DJANGO's MODEL
+    #     if isinstance(element, Model):
+    #         serializers = serializers(element)
+    #         model_json = json.dumps(element).encode("utf-8")
+    #         return base64.b64encode(model_json)
+    #     return None
 
     # def binary_to_django_object(self, element: bytes) -> Model | QuerySet[Model] | None:
 

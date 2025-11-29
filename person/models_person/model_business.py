@@ -10,9 +10,9 @@ from django.core.validators import (
     MinLengthValidator,
 )
 from django.db import models
-from django.apps import apps
 
-BaseModel = apps.get_model("person", "BaseModel")
+
+from person.models_person.model_basic import BaseModel
 
 
 class BusinessElementModel(BaseModel):
@@ -23,7 +23,7 @@ class BusinessElementModel(BaseModel):
             MaxLengthValidator(120),
             MinLengthValidator(1),
             RegexValidator(
-                regex=r"^[A-Za-z0-9_]+$",
+                regex=r"^([A-Z][A-Za-z0-9_]{1,119})$",
             ),
         ],
         help_text="The business element name",
@@ -44,15 +44,6 @@ class BusinessElementModel(BaseModel):
         verbose_name = "business element"
         verbose_name_plural = "business elements"
         ordering = ["-updated_at"]
-        unique_together = (
-            (
-                "is",
-                "name",
-                "code",
-            ),
-            "descriptions",
-            ("created_at", "updated_at"),
-        )
 
     def __str__(self):
         return self.name

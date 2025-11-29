@@ -10,7 +10,8 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
-from person.models import BaseModel
+from person.models_person.model_basic import BaseModel
+from person.models_person.model_business import BusinessElementModel
 
 
 class RoleModel(BaseModel):
@@ -36,7 +37,7 @@ class RoleModel(BaseModel):
 
     class Meta:
         db_table = "role"
-        unique_together = (("id", "name"), "description", ("created_at", "updated_at"))
+        # unique_together = (("id", "name"), "description", ("created_at", "updated_at"))
         verbose_name = _("Role")
         ordering = ("name",)
 
@@ -50,13 +51,13 @@ class AccessRolesModel(BaseModel):
     """
 
     role = models.ForeignKey(
-        RoleModel,
+        "RoleModel",
         on_delete=models.CASCADE,
         related_name="access_rules",
         db_column="role_id",
     )
     element = models.ForeignKey(
-        "BusinessElementModel",
+        BusinessElementModel,
         on_delete=models.CASCADE,
         related_name="access_rules",
         db_column="element_id",
@@ -98,16 +99,7 @@ class AccessRolesModel(BaseModel):
 
     class Meta:
         db_table = "access_roles"
-        unique_together = (
-            ("id", "role", "element"),
-            (
-                "read_permission",
-                "update_permission",
-                "update_all_permission",
-                "delete_permission",
-            ),
-            ("created_at", "updated_at"),
-        )
+
         verbose_name = _("Access roles")
         ordering = ("role", "element")
 
