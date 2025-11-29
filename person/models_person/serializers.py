@@ -7,7 +7,6 @@ from typing import Optional, List
 
 from adrf.serializers import ModelSerializer
 
-# from drf_yasg.inspectors import view
 from rest_framework import serializers
 
 
@@ -21,39 +20,68 @@ class UserSerializer(ModelSerializer):
     User serializer
     """
 
-    password = serializers.CharField(write_only=True, min_length=8, max_length=255)
+    role = serializers.CharField(write_only=True)
+    password = serializers.CharField(min_length=6, max_length=255)
     password_confirm = serializers.CharField(
         write_only=True, min_length=6, max_length=255
     )
 
     class Meta:
         model = User
-        fields = (
+        fields = [
             "id",
-            "username",
-            "status",
             "email",
+            "role",
+            "is_staff",
             "first_name",
+            "is_superuser",
+            "is_active",
+            "is_sent",
+            "is_verified",
+            "status",
             "last_name",
-            "password",
-            "password_confirm",
+            "created_at",
             "updated_at",
+            "username",
+            "password_confirm",
+            "password",
+        ]
+        read_only_fields = (
+            "username",
+            "password_hash",
+            "refer",
+            "is_sent",
+            "is_verified",
+            "verification_code",
+            "status",
         )
-        read_only_fields = ("created_at",)
+
+        # read_only_fields = ("created_at",)
 
     def validate(self, attrs) -> dict:
         if attrs["password"] != attrs["password_confirm"]:
             raise serializers.ValidationError("Passwords don't match")
+        role_name = attrs.get("role")
+        if not role_name:
+            raise serializers.ValidationError({"role": "Role is required"})
         return attrs
 
-    def create(self, validated_date) -> Optional[User]:
-        validated_date.pop("password_confirm")
-        password = validated_date.pop("password")
+    async def acreate(self, validated_data) -> Optional[User]:
+        validated_data.pop("password_confirm")
+        password = validated_data.pop("password")
 
-        user_role = RoleModel.objects.get_or_create(name=validated_date["role"])
-        user = User.objects.create(rolle=user_role, **validated_date)
+        email = validated_data.get("email")
+        validated_data["username"] = email.split("@")[0]
+
+        role_name = validated_data.pop("role")
+        validated_data.pop("groups", None)
+        validated_data.pop("user_permissions", None)
+
+        user_role, created = await RoleModel.objects.aget_or_create(name=role_name)
+        user = await User.objects.acreate(role=user_role, **validated_data)
+
         user.set_password(password)
-        user.save()
+        await user.asave()
         return user
 
 
@@ -77,20 +105,3 @@ type PersonRoleSerializer = Optional[RoleSerializer]
 type PersonSerializerList = Optional[
     PersonUserSerializer, PersonBusinessSerializer, PersonRoleSerializer
 ]
-
-# class DynamicSerializer:
-#     def __init__(self, ):
-#
-#         self.serializers = {}
-#
-#     def add_serializzer(self,
-#                         serializers_list:PersonSerializerList) -> None:
-#         # [UserSerializer, BusinessSerializer, RoleSerializer]
-#         for view in serializers_list:
-#             if view.Meta:
-#                 self.serializers[view.Meta.model.__class__.__name__ ] = view
-#         return None
-#
-#     def run_serializzer(self, model: Model)
-#
-#

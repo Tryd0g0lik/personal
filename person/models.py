@@ -15,6 +15,8 @@ from django.core.validators import (
 )
 from django.db import models
 
+# from pkg_resources import require
+
 from person.jwt.person_jwt_manager import TokenManager
 from person.models_person.model_basic import BaseModel
 from person.models_person.model_role import RoleModel
@@ -43,16 +45,34 @@ class User(BaseModel, AbstractUser):
 
     """
 
+    username = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(regex="^(^$|[A-Za-z]+$)"),
+            MaxLengthValidator(50),
+        ],
+    )
+    first_name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(regex="(^$|[A-Za-z]+$)"),
+            MaxLengthValidator(50),
+        ],
+    )
     last_name = models.CharField(
         max_length=50,
         blank=True,
         null=True,
         validators=[
-            RegexValidator(regex="^(^$|A-Za-z]+$"),
+            RegexValidator(regex="(^$|[A-Za-z]+$)"),
             MaxLengthValidator(50),
         ],
     )
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=False)
     status = models.CharField(
         default=AUTHENTIFICATION_STATUS[0][0],
         choices=AUTHENTIFICATION_STATUS,
@@ -61,10 +81,12 @@ class User(BaseModel, AbstractUser):
     password_hash = models.CharField(
         _("password"),
         max_length=255,
+        blank=True,
+        null=True,
         validators=[
-            MinLengthValidator(6),
+            # MinLengthValidator(6),
             MaxLengthValidator(255),
-            RegexValidator(regex="[A-Za-z0-9-_%]{6,255)$"),
+            RegexValidator(regex="[A-Za-z0-9-_%]{6,255}$"),
         ],
     )
     role = models.ForeignKey(RoleModel, on_delete=models.PROTECT, related_name="users")
@@ -86,28 +108,31 @@ to user's email. User indicates his email at the registrations moment."
         null=True,
         validators=[MinLengthValidator(50)],
     )
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
 
     def __str__(self):
-        return "User: %s Regisrated was: %s" % (self.username, self.created_at)
+        return "User: %s Regisrated was: %s" % (self.email, self.created_at)
 
     class Meta:
         db_table = "user"
         verbose_name = _("User")
 
-        indexes = [models.Index(fields=["is_active"])]
+        # indexes = [models.Index(fields=["is_active"])]
 
     def set_password(self, password: str) -> None:
         """Hashing of password"""
         d = DcodeManager()
-        salt = str(self.id).encode("utf-8")
-        self.password = bcrypt.hashpw(d.str_to_bcode(password), salt).decode("utf-8")
+        salt = bcrypt.gensalt()
+        self.password = bcrypt.hashpw(d.str_to_bynary(password), salt).decode("utf-8")
 
     def check_password(self, password: str) -> bool:
         """Checking password"""
         d = DcodeManager()
-        salt = str(self.id).encode("utf-8")
+        salt = bcrypt.gensalt()
         return bcrypt.checkpw(
-            bcrypt.hashpw(d.str_to_bcode(password), salt), self.password.encode("utf-8")
+            bcrypt.hashpw(d.str_to_bynary(password), salt),
+            self.password.encode("utf-8"),
         )
 
     def get_token_manager(self) -> Optional[TokenManager]:
@@ -133,3 +158,11 @@ to user's email. User indicates his email at the registrations moment."
         """Check the token"""
         manager = self.get_token_manager()
         return manager.verify_access_token(token_str)
+
+    def save(self, *args, **kwargs):
+        if not self.username:
+            self.username = self.email.split("@")[0]
+        super().save(*args, **kwargs)
+
+
+type TypeUserModel = Optional[User.objects]

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+
 import os
 import dotenv
 from pathlib import Path
@@ -51,19 +52,19 @@ JWT_ACCESS_TOKEN_LIFETIME_MINUTES = os.getenv("JWT_ACCESS_TOKEN_LIFETIME_MINUTES
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = os.getenv("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 1)
 
 # Email Service
-SMTP_HOST=os.getenv("SMTP_HOST", "")
-SMTP_USER=os.getenv("SMTP_USER", "")
-SMTP_PORT=os.getenv("SMTP_PORT", "465")
-SMTP_PASS=os.getenv("SMTP_PASS", "")
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PORT = os.getenv("SMTP_PORT", "465")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
 
 # Redis
-REDIS_HOST=os.getenv("REDIS_HOST", "")
-DB_TO_RADIS_PORT=os.getenv("DB_TO_RADIS_PORT", "")
-DB_TO_RADIS_HOST=os.getenv("DB_TO_RADIS_HOST", "")
-DB_TO_RADIS_CACHE_USERS=os.getenv("DB_TO_RADIS_CACHE_USERS", "")
+REDIS_HOST = os.getenv("REDIS_HOST", "")
+DB_TO_RADIS_PORT = os.getenv("DB_TO_RADIS_PORT", "")
+DB_TO_RADIS_HOST = os.getenv("DB_TO_RADIS_HOST", "")
+DB_TO_RADIS_CACHE_USERS = os.getenv("DB_TO_RADIS_CACHE_USERS", "")
 # '''Cookie'''
 SESSION_COOKIE_HTTPONLY = False  # CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True # change to the True - CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True  # change to the True - CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"  # CSRF_COOKIE_SAMESITE = 'Lax'  # or 'Strict'
 SESSION_COOKIE_AGE = 86400
 # ''' CHOICES '''
@@ -74,7 +75,7 @@ AUTHENTIFICATION_STATUS = [
     ("COMPLETED", _("Completed of authentification")),
 ]
 
-DJANGO_ENV = os.environ.get('DJANGO_ENV')
+DJANGO_ENV = os.environ.get("DJANGO_ENV")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -87,25 +88,32 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if isinstance(IS_DEBUG, str) and int(IS_DEBUG) == 1 else False
 
+
 # """" HOST """"
 def get_allowed_hosts(allowed_hosts: str):
     """
     The function is for the securite connection to the allowed hosts
     """
     from django.core.exceptions import ImproperlyConfigured
+
     hosts = allowed_hosts.split(", ")
     hosts = [h.strip() for h in hosts if h.strip()]
 
-    if DJANGO_ENV == 'production':
-        hosts = [f"{APP_HOST_REMOTE}".strip(), "db",
-                 "backend",
-                 "nginx",
-                 "celery",
-                 "redis", '[::1]']
+    if DJANGO_ENV == "production":
+        hosts = [
+            f"{APP_HOST_REMOTE}".strip(),
+            "db",
+            "backend",
+            "nginx",
+            "celery",
+            "redis",
+            "[::1]",
+        ]
 
-    if not hosts and DJANGO_ENV == 'production':
+    if not hosts and DJANGO_ENV == "production":
         raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production")
     return hosts
+
 
 ALLOWED_HOSTS = get_allowed_hosts("127.0.0.1, localhost")
 # """" DATABASE """"
@@ -122,19 +130,19 @@ DATABASES = {
     }
 }
 # POSTGRES DB TEST
-if not DEBUG and DJANGO_ENV == 'testing':
-    DATABASES['default']['NAME'] = os.getenv('TEST_DB_NAME', 'test_myapp_db')
-    DATABASES['default']['USER'] = os.getenv('TEST_DB_USER', 'test_user')
-    DATABASES['default']['PASSWORD'] = os.getenv('TEST_DB_PASSWORD', 'test_password')
+if not DEBUG and DJANGO_ENV == "testing":
+    DATABASES["default"]["NAME"] = os.getenv("TEST_DB_NAME", "test_myapp_db")
+    DATABASES["default"]["USER"] = os.getenv("TEST_DB_USER", "test_user")
+    DATABASES["default"]["PASSWORD"] = os.getenv("TEST_DB_PASSWORD", "test_password")
 
 # DEBUG
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 if DEBUG:
     SECURE_BROWSER_XSS_FILTER = False
     SECURE_CONTENT_TYPE_NOSNIFF = False
-    SECURE_SSL_REDIRECT = False # http is False & https is True
+    SECURE_SSL_REDIRECT = False  # http is False & https is True
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
     SECURE_CROSS_ORIGIN_OPENER_POLICY = None
@@ -143,72 +151,72 @@ if DEBUG:
     # SQLite DB TEST
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "person_db.sqlite3"
+        "NAME": BASE_DIR / "person_db.sqlite3",
     }
     # SQLite DB TEST
     if DJANGO_ENV.startswith("testing"):
-        DATABASES["default"]["NAME"] =  BASE_DIR / "person_test_db.sqlite3"
-
+        DATABASES["default"]["NAME"] = BASE_DIR / "person_test_db.sqlite3"
 
 
 INSTALLED_APPS = [
     "daphne",
-    'wagtail.contrib.forms',
-    'wagtail.contrib.redirects',
-    'wagtail.embeds',
-    'wagtail.sites',
-    'wagtail.users',
-    'wagtail.snippets',
-    'wagtail.documents',
-    'wagtail.images',
-    'wagtail.search',
-    'wagtail.admin',
-    'wagtail.contrib.settings',
-    'wagtail',
-    'taggit',
-    'modelcluster',
-    'rest_framework',
-    'corsheaders',
-    'adrf',
-    'channels',
+    "wagtail.contrib.forms",
+    "wagtail.contrib.redirects",
+    "wagtail.embeds",
+    "wagtail.sites",
+    "wagtail.users",
+    "wagtail.snippets",
+    "wagtail.documents",
+    "wagtail.images",
+    "wagtail.search",
+    "wagtail.admin",
+    "wagtail.contrib.settings",
+    "wagtail",
+    "taggit",
+    "modelcluster",
+    "rest_framework",
+    "corsheaders",
+    "drf_yasg",
+    "adrf",
+    "channels",
     "webpack_loader",
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'person'
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "person",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    'django.middleware.common.CommonMiddleware',
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
 ]
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = "project.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
             os.path.join(BASE_DIR, "templates"),
         ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -221,9 +229,9 @@ ASGI_APPLICATION = "project.asgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -233,16 +241,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -259,42 +267,42 @@ USE_I18N = True
 
 USE_TZ = True
 
-DATE_FORMAT = 'd.m.Y'
-DATETIME_FORMAT = 'd.m.Y H:i'
+DATE_FORMAT = "d.m.Y"
+DATETIME_FORMAT = "d.m.Y H:i"
 USE_L10N = False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,  "static"),
+    os.path.join(BASE_DIR, "static"),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR,  "collectstatic/")
-STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "collectstatic/")
+STATIC_URL = "static/"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # Default primary key field type
 
 # Application definition
-#file extension
-f_extension = 'csv, docx, pdf,  rtf, txt, xlsx, zip'
-WAGTAILDOCS_EXTENSIONS = list(f_extension.split(", "))# ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+# file extension
+f_extension = "csv, docx, pdf,  rtf, txt, xlsx, zip"
+WAGTAILDOCS_EXTENSIONS = list(
+    f_extension.split(", ")
+)  # ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
 
 # Options for file's repository/source
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # '''WHITENOISE'''
 # for a static files in production
 # https://whitenoise.readthedocs.io/en/stable/django.html
 WHITENOISE_MAX_AGE = 31536000  # static cache by 1 year
 WHITENOISE_USE_FINDERS = True
-
-
 
 
 # HASH passwords
@@ -319,7 +327,6 @@ CORS_ALLOWED_ORIGINS = [
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
     f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
     "http://127.0.0.1:8000",
-
 ]
 
 # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#csrf-integration
@@ -435,10 +442,7 @@ WEBPACK_LOADER = {
         "CACHE": not DEBUG,
         # 'BUNDLE_DIR_NAME': '..\\frontend\\src\\bundles',
         "BUNDLE_DIR_NAME": "static",
-        "STATS_FILE": os.path.join(
-            BASE_DIR, "bundles/webpack-stats.json"
-        ),
-
+        "STATS_FILE": os.path.join(BASE_DIR, "bundles/webpack-stats.json"),
         "POLL_INTERVAL": 0.1,
         "TIMEOUT": None,
         "TEST": {
@@ -491,12 +495,9 @@ SPECTACULAR_SETTINGS = {
 }
 
 # '''WAGTAIL'''
-WAGTAIL_SITE_NAME = 'PERSON_PROFILE'
+WAGTAIL_SITE_NAME = "PERSON_PROFILE"
 # Replace the search backend
 WAGTAILSEARCH_BACKENDS = {
- 'default': {
-   'BACKEND': 'wagtail.search.backends.elasticsearch8',
-   'INDEX': 'myapp'
- }
+    "default": {"BACKEND": "wagtail.search.backends.elasticsearch8", "INDEX": "myapp"}
 }
 WAGTAILADMIN_BASE_URL = CORS_ALLOWED_ORIGINS[0]

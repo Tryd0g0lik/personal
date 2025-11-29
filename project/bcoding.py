@@ -2,12 +2,13 @@ import base64
 import logging
 from logs import configure_logging
 
+
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
 
 
 class DcodeManager:
-    def str_to_bcode(self, context: str) -> base64.b64encode:
+    def str_to_bynary(self, context: str) -> base64.b64encode:
         """
         https://docs.djangoproject.com/en/5.2/topics/serialization/#serializing-data
         This is function is works with string
@@ -18,7 +19,7 @@ class DcodeManager:
             raise TypeError(
                 "[%s.%s]: 'context' must be a string",
                 self.__class__.__name__,
-                self.str_to_bcode.__name__,
+                self.str_to_bynary.__name__,
             )
         try:
             return base64.b64encode(context.encode("utf-8"))
@@ -26,13 +27,13 @@ class DcodeManager:
         except Exception as e:
             test_error = "[%s.%s]: ERROR => %s" % (
                 self.__class__.__name__,
-                self.str_to_bcode.__name__,
+                self.str_to_bynary.__name__,
                 e.args[0],
             )
             log.error(test_error)
             raise test_error
 
-    def bcode_to_str(self, context: str) -> str:
+    def bynary_to_str(self, context: str) -> str:
         """
         This is function is works with string
         :param context: this is string from string of 'base64.b64encode'
@@ -42,14 +43,14 @@ class DcodeManager:
             raise TypeError(
                 "[%s.%s]: 'context' must be a string",
                 self.__class__.__name__,
-                self.bcode_to_str.__name__,
+                self.bynary_to_str.__name__,
             )
         try:
             return base64.b64decode(context.encode("utf-8")).decode("utf-8")
         except Exception as e:
             test_error = "[%s.%s]: ERROR => %s" % (
                 self.__class__.__name__,
-                self.bcode_to_str.__name__,
+                self.bynary_to_str.__name__,
                 e.args[0],
             )
             log.error(test_error)
@@ -65,7 +66,7 @@ class DcodeManager:
     #         return base64.b64encode(model_json)
     #     return None
 
-    # def binary_to_django_object(self, element: bytes) -> Model | QuerySet[Model] | None:
+    # def binary_to_django_object(self, element: bytes) -> TypeUserModel | None:
 
     # def object_to_binary(self, element) -> bytes:
     #     """
