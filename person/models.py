@@ -12,6 +12,7 @@ from django.core.validators import (
     MinLengthValidator,
     MaxLengthValidator,
     RegexValidator,
+    EmailValidator,
 )
 from django.db import models
 
@@ -72,7 +73,16 @@ class User(BaseModel, AbstractUser):
             MaxLengthValidator(50),
         ],
     )
-    email = models.EmailField(unique=True, blank=False)
+    email = models.EmailField(
+        unique=True,
+        blank=False,
+        validators=[
+            EmailValidator(),
+            RegexValidator(
+                regex=r"(^[A-Za-z][A-Za-z_0-9-]{0,20}@[A-Za-z]{1,10}\.[A-Za-z]{2,3})"
+            ),
+        ],
+    )
     status = models.CharField(
         default=AUTHENTIFICATION_STATUS[0][0],
         choices=AUTHENTIFICATION_STATUS,
@@ -86,7 +96,7 @@ class User(BaseModel, AbstractUser):
         validators=[
             # MinLengthValidator(6),
             MaxLengthValidator(255),
-            RegexValidator(regex="[A-Za-z0-9-_%]{6,255}$"),
+            RegexValidator(regex="[A-Za-z0-9-_)(%]{6,255}$"),
         ],
     )
     role = models.ForeignKey(RoleModel, on_delete=models.PROTECT, related_name="users")

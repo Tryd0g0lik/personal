@@ -4,10 +4,13 @@ person/models_person/serializers.py
 
 import logging
 import asyncio
+import re
 from typing import Optional, List
 
 from adrf.serializers import ModelSerializer
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from django.core.validators import validate_email
 from person.models import User
 from person.models_person.model_business import BusinessElementModel
 from person.models_person.model_role import RoleModel
@@ -27,6 +30,7 @@ class UserSerializer(ModelSerializer):
     password_confirm = serializers.CharField(
         write_only=True, min_length=6, max_length=255
     )
+    email = serializers.EmailField()
 
     class Meta:
         model = User
@@ -61,11 +65,34 @@ class UserSerializer(ModelSerializer):
         # read_only_fields = ("created_at",)
 
     def validate(self, attrs) -> dict:
-        if attrs["password"] != attrs["password_confirm"]:
+        regex = r"[A-Za-z0-9-_%)(]{6,255}$"
+        if attrs["password"] != attrs["password_confirm"] or not re.search(
+            regex, attrs["password"]
+        ):
             raise serializers.ValidationError("Passwords don't match")
         role_name = attrs.get("role")
         if not role_name:
             raise serializers.ValidationError({"role": "Role is required"})
+
+        email = attrs.get("email")
+        print("EMAIL 1")
+        rege = r"(^[A-Za-z][A-Za-z_0-9-]{0,20}@[A-Za-z]{1,10}\.[A-Za-z]{2,3})"
+        if (
+            not email
+            or "@" not in email
+            or "." not in email.split("@")[-1]
+            or not re.search(rege, email)
+        ):
+            print("EMAIL 2")
+            raise serializers.ValidationError(
+                {"email": "Enter a invalid email address"}
+            )
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            raise serializers.ValidationError(
+                {"email": "Enter a invalid email address => %s " % e.args[0]}
+            )
         return attrs
 
     async def acreate(self, validated_data) -> Optional[User]:
@@ -74,7 +101,6 @@ class UserSerializer(ModelSerializer):
 
         email = validated_data.get("email").strip()
         validated_data["username"] = email.split("@")[0].capitalize()
-
         role_name = validated_data.pop("role").strip()
         validated_data.pop("groups", None)
         validated_data.pop("user_permissions", None)

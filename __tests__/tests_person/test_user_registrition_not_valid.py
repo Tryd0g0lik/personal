@@ -17,25 +17,31 @@ configure_logging(logging.INFO)
 
 
 
+
 @pytest.mark.parametrize(
     "email, password, password_confirm, role, expected",
     [
-        ("work1@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "staff", True),
-        (" work2@mail.ru ", " gKU12pgP5hB ", "gKU12pgP5hB", "staff", True),
-        ("work3@mail.ru", "gKU12pgP5hB", " gKU12pgP5hB ", "staff", True),
-        ("work4@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", " staff ", True),
-        ("work5@mail.ru", "gKU12pgP_5hB", "gKU12pgP_5hB", " staff ", True),
-        ("work6@mail.ru", "gKU12pgP-5hB", "gKU12pgP-5hB", " staff ", True),
-        ("work7@mail.ru", "gKU12pgP%5hB", "gKU12pgP%5hB", " staff ", True),
-        ("work8@mail.ru", "gKU12pgP(%5hB", "gKU12pgP(%5hB", " staff ", True),
+        ("work1mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "staff", False),
+        (" work2@mailru", " gKU12pgP5hB ", "gKU12pgP5hB", "staff", False),
+        ("@mail.ru", "gKU12pgP5hB", " gKU12pgP5hB ", "staff", False),
+        ("%work4@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", " staff ", False),
+        ("work5@mail.ru", "gKU12pgP5hBt", "gKU12pgP5hB", " staff ", False),
+        ("work6@mail.ru", "", "", " staff ", False),
+        ("work7@mail.ru", "  ", "  ", " staff ", False),
+        ("work8@mail.ru", "_____", "_____", " staff ", False),
+        ("work9@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "  ", False),
+        ("work10@mail.ru", "gKU12pgP 5hB", "gKU12pgP 5hB", " staff ", False),
+        ("work11@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "", False),
+
+
     ],
 )
-@pytest.mark.person_creat_valid
+@pytest.mark.invalid
 @pytest.mark.django_db
-async def test_person_valid(f_clear_db, fix_user_registration,fix_get_session,
+async def test_person_invalid(f_clear_db, fix_get_session,
                             email, password, password_confirm, role, expected) -> None:
     from person.views_api.views_person_api import UserViews
-    text_test = "[%s]:" % test_person_valid.__name__,
+    text_test = "[%s]:" % test_person_invalid.__name__,
     await f_clear_db(User)
     await f_clear_db(RoleModel)
     log.info(
@@ -50,8 +56,9 @@ async def test_person_valid(f_clear_db, fix_user_registration,fix_get_session,
         )
     )
     fuctory = APIRequestFactory()
-    await fix_user_registration(fix_get_session, fuctory, email, password, password_confirm, role)
-    request = fuctory.post("/person/", content_type="application/json")
+
+    # AnonymousUser
+    request = fuctory.post("/api/v1/person/", content_type="application/json")
     request.__setattr__("user", AnonymousUser())
     request.user.__setattr__("is_active", False)
     request.__setattr__(
@@ -66,12 +73,14 @@ async def test_person_valid(f_clear_db, fix_user_registration,fix_get_session,
     log.info("%s GET REQUEST.data['email'] %s" % (text_test, email))
     response = await UserViews().create(request)
 
-    res_bool = True if response.status_code < 300 else False
+    res_bool = False if response.status_code >= 400 else True
+    log.info("%s GET 'res_bool': %s" % (text_test, res_bool))
     assert res_bool == expected
     assert isinstance(response.data, dict)
     log.info("%s GET REQUEST.data %s" % (text_test, response.data.__str__()))
     # assert not isinstance(response.data[0].values()[0], str)
-    assert not response.data.get("error")
+    assert response.data.get("data")
+    assert isinstance(response.data.get("data"), str)
 
     log.info(
         "%s Test completed. RESPONSE 'response.data': %s" % (text_test, response.data)

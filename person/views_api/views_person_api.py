@@ -139,7 +139,7 @@ class UserViews(viewsets.ModelViewSet):
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.create.__name__)
         user = request.user if request.user else AnonymousUser()
         data = request.data
-        response = Response(status=status.HTTP_401_UNAUTHORIZED)
+        response = Response()
         if user.is_anonymous:
             try:
                 # CHECK - VALID DATA
@@ -148,7 +148,7 @@ class UserViews(viewsets.ModelViewSet):
                 if is_valid:
                     await serializer.asave()
                     text_log += " User created successful."
-                    log.error(text_log)
+                    log.info(text_log)
                     response.status_code = status.HTTP_200_OK
                     response_data = await asyncio.to_thread(lambda: serializer.data)
                     response_data.pop("password")
@@ -157,6 +157,7 @@ class UserViews(viewsets.ModelViewSet):
                 text_log += " User created failed."
                 log.info(text_log)
                 response.data = {"data": "User creates failed."}
+                response.status_code = status.HTTP_401_UNAUTHORIZED
                 return response
             except Exception as error:
                 text_log += f"ERROR => {error.args[0]}"
