@@ -6,16 +6,15 @@ import logging
 from rest_framework.test import APIRequestFactory
 from django.contrib.auth.models import AnonymousUser
 from __tests__.__fixtures__.fixtures_db import f_clear_db
-from __tests__.__fixtures__.fixtures_query import fix_user_registration, fix_get_session
+from __tests__.__fixtures__.fixtures_query import fix_get_session
 from logs import configure_logging
 from person.models import User
 from person.models_person.model_role import RoleModel
-from person.views import CSRFTokenView
 
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
 
-
+# ===== REGISTRATION
 
 
 @pytest.mark.parametrize(
@@ -32,8 +31,6 @@ configure_logging(logging.INFO)
         ("work9@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "  ", False),
         ("work10@mail.ru", "gKU12pgP 5hB", "gKU12pgP 5hB", " staff ", False),
         ("work11@mail.ru", "gKU12pgP5hB", "gKU12pgP5hB", "", False),
-
-
     ],
 )
 @pytest.mark.invalid
@@ -78,10 +75,8 @@ async def test_person_invalid(f_clear_db, fix_get_session,
     assert res_bool == expected
     assert isinstance(response.data, dict)
     log.info("%s GET REQUEST.data %s" % (text_test, response.data.__str__()))
-    # assert not isinstance(response.data[0].values()[0], str)
     assert response.data.get("data")
     assert isinstance(response.data.get("data"), str)
-
     log.info(
         "%s Test completed. RESPONSE 'response.data': %s" % (text_test, response.data)
     )

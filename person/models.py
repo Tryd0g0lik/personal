@@ -139,9 +139,9 @@ to user's email. User indicates his email at the registrations moment."
     def check_password(self, password: str) -> bool:
         """Checking password"""
         d = DcodeManager()
-        salt = bcrypt.gensalt()
+
         return bcrypt.checkpw(
-            bcrypt.hashpw(d.str_to_bynary(password), salt),
+            d.str_to_bynary(password),
             self.password.encode("utf-8"),
         )
 
@@ -172,6 +172,7 @@ to user's email. User indicates his email at the registrations moment."
     def save(self, *args, **kwargs):
         if not self.username:
             self.username = self.email.split("@")[0]
+
         super().save(*args, **kwargs)
 
 

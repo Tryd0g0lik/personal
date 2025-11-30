@@ -10,12 +10,12 @@ from __tests__.__fixtures__.fixtures_query import fix_user_registration, fix_get
 from logs import configure_logging
 from person.models import User
 from person.models_person.model_role import RoleModel
-from person.views import CSRFTokenView
+
 
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
 
-
+# ===== REGISTRATION
 
 @pytest.mark.parametrize(
     "email, password, password_confirm, role, expected",

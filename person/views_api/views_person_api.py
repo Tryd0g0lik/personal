@@ -1,20 +1,20 @@
 import asyncio
 import logging
-import re
-from http.client import responses
 
 from adrf import viewsets
-from django.http import HttpRequest, HttpResponse
+from celery import group
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_yasg.utils import swagger_auto_schema
 
 from logs import configure_logging
 from person.models import User
 from django.contrib.auth.models import AnonymousUser
-from person.models_person.serializers import UserSerializer
+from person.views_api.serializers import UserSerializer, ProfileSerializer
 from drf_yasg import openapi
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework import serializers, status
+from rest_framework import status, authentication
 
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
@@ -23,6 +23,7 @@ configure_logging(logging.INFO)
 class UserViews(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    authentication_classes = [authentication.SessionAuthentication]
 
     @swagger_auto_schema(
         operation_description="""
@@ -132,27 +133,32 @@ class UserViews(viewsets.ModelViewSet):
         This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
         THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
         In moment of registration, we fill the username's field by the text from the email address.
-        TODO: добоавить токен
+
         :param request:
         :return:
         """
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.create.__name__)
         user = request.user if request.user else AnonymousUser()
         data = request.data
+        role = data.get("role")
         response = Response()
         if user.is_anonymous:
             try:
                 # CHECK - VALID DATA
+                # is staff
                 serializer = self.serializer_class(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
+                    # User is creating
                     await serializer.asave()
-                    text_log += " User created successful."
-                    log.info(text_log)
-                    response.status_code = status.HTTP_200_OK
-                    response_data = await asyncio.to_thread(lambda: serializer.data)
-                    response_data.pop("password")
-                    response.data = {"data": response_data}
+                    is_staff = role not in ["user", "visitor"]
+                    u = await asyncio.to_thread(
+                        lambda: User.objects.get(email=data["email"])
+                    )
+
+                    u.is_staff = is_staff
+                    await u.asave()
+                    response.data = {"data": "User created successfully"}
                     return response
                 text_log += " User created failed."
                 log.info(text_log)
@@ -185,4 +191,46 @@ class UserViews(viewsets.ModelViewSet):
             response.data[0].pop("password")
         if isinstance(response.data, dict):
             response.data.pop("password")
+        return response
+
+
+class ProfileViewSet(viewsets.ViewSet):
+    @method_decorator(ensure_csrf_cookie)
+    async def active(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
+        user = request.user if request.user else AnonymousUser()
+        data = request.data
+
+        response = Response()
+
+        if user.is_anonymous:
+            try:
+                # serializer = self.serializer_class(data=data)
+                serializer = ProfileSerializer(data=data)
+                is_valid = await asyncio.to_thread(serializer.is_valid)
+                if is_valid:
+                    # u = User.objects.get(email=data.get("email"))
+                    # u.is_active = True
+                    #
+                    kwargs = {"is_active": True}
+                    await serializer.update(**kwargs)
+                    # c = Cookies(session_key_user="token_jwt", response=response)
+                    # tokens_str = json.dumps(tokens_dict)
+                    # c.session_user(value=tokens_str
+                else:
+                    text_log += " Data is invalid."
+                    log.info(text_log)
+                    response.data = {"data": text_log}
+                    response.status_code = status.HTTP_401_UNAUTHORIZED
+                    return response
+            except Exception as error:
+                text_log += f"ERROR => {error.args[0]}"
+                log.error(text_log)
+                response.data = {"errors": text_log}
+                response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                return response
+        text_log += " User was activated before this."
+        log.info(text_log)
+        response.data = {"data": text_log}
+        response.status_code = status.HTTP_401_UNAUTHORIZED
         return response
