@@ -60,7 +60,7 @@ class UserViews(viewsets.ModelViewSet):
                 "password": openapi.Schema(
                     example="nH2qGiehvEXjNiYqp3bOVtAYv....", type=openapi.TYPE_STRING
                 ),
-                "role": openapi.Schema(example="manager", type=openapi.TYPE_STRING),
+                "role": openapi.Schema(example="staff", type=openapi.TYPE_STRING),
                 "username": openapi.Schema(example="Serge", type=openapi.TYPE_STRING),
                 "first_name": openapi.Schema(example="null", type=openapi.TYPE_STRING),
                 "last_login": openapi.Schema(example="null", type=openapi.TYPE_STRING),
@@ -129,6 +129,9 @@ class UserViews(viewsets.ModelViewSet):
     )
     async def create(self, request: Request, *args, **kwargs) -> Response:
         """
+        This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
+        THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
+        In moment of registration, we fill the username's field by the text from the email address.
         TODO: добоавить токен
         :param request:
         :return:
@@ -143,7 +146,6 @@ class UserViews(viewsets.ModelViewSet):
                 serializer = self.serializer_class(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
-
                     await serializer.asave()
                     text_log += " User created successful."
                     log.error(text_log)

@@ -2,17 +2,19 @@
 person/models_person/serializers.py
 """
 
+import logging
 import asyncio
 from typing import Optional, List
 
 from adrf.serializers import ModelSerializer
-
 from rest_framework import serializers
-
-
 from person.models import User
 from person.models_person.model_business import BusinessElementModel
 from person.models_person.model_role import RoleModel
+from logs import configure_logging
+
+configure_logging(logging.INFO)
+log = logging.getLogger(__name__)
 
 
 class UserSerializer(ModelSerializer):
@@ -67,22 +69,30 @@ class UserSerializer(ModelSerializer):
         return attrs
 
     async def acreate(self, validated_data) -> Optional[User]:
-        validated_data.pop("password_confirm")
-        password = validated_data.pop("password")
+        validated_data.pop("password_confirm").strip()
+        password = validated_data.pop("password").strip()
 
-        email = validated_data.get("email")
-        validated_data["username"] = email.split("@")[0]
+        email = validated_data.get("email").strip()
+        validated_data["username"] = email.split("@")[0].capitalize()
 
-        role_name = validated_data.pop("role")
+        role_name = validated_data.pop("role").strip()
         validated_data.pop("groups", None)
         validated_data.pop("user_permissions", None)
-
-        user_role, created = await RoleModel.objects.aget_or_create(name=role_name)
-        user = await User.objects.acreate(role=user_role, **validated_data)
-
-        user.set_password(password)
-        await user.asave()
-        return user
+        try:
+            user_role, created = await RoleModel.objects.aget_or_create(name=role_name)
+            user = await User.objects.acreate(role=user_role, **validated_data)
+            user.status = "PROCESS"
+            user.set_password(password)
+            await user.asave()
+            return user
+        except Exception as e:
+            text_e = "[%s.%s]: %s" % (
+                self.__class__.__name__,
+                self.acreate.__name__,
+                e.args[0],
+            )
+            log.error(text_e)
+            raise text_e
 
 
 class BusinessSerializer(ModelSerializer):
