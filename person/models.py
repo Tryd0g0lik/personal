@@ -147,7 +147,7 @@ to user's email. User indicates his email at the registrations moment."
             self.password.encode("utf-8"),
         )
 
-    def get_token_manager(self) -> Optional[TokenManager]:
+    def _get_token_manager(self) -> Optional[TokenManager]:
         """Gets the manage for token"""
         return TokenManager(self)
 
@@ -160,7 +160,7 @@ to user's email. User indicates his email at the registrations moment."
         :return:
         """
 
-        manager = self.get_token_manager()
+        manager = self._get_token_manager()
 
         return manager.create_token(
             access_lifetime=access_lifetime, refresh_lifetime=refresh_lifetime
@@ -168,7 +168,7 @@ to user's email. User indicates his email at the registrations moment."
 
     def verify_token(self, token_str: str) -> bool:
         """Check the token"""
-        manager = self.get_token_manager()
+        manager = self._get_token_manager()
         return manager.verify_access_token(token_str)
 
     def save(self, *args, **kwargs):

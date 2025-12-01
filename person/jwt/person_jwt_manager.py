@@ -1,8 +1,15 @@
+import asyncio
+import json
+import threading
 import uuid
+
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import timedelta
 from typing import Optional
 from person.jwt.person_jwt_access_token import CustomAccessToken
+
+from project.bcoding import DcodeManager
 
 
 class TokenManager:
@@ -20,17 +27,19 @@ class TokenManager:
         :param refresh_lifetime: seconds - the time of the token's refresh
         :return:
         """
+        from django.core.serializers import get_serializer
+
         self.refresh_token = RefreshToken.for_user(self.user)
         self.access_token = CustomAccessToken.for_user(
             self.user, lifetime=access_lifetime
         )
 
         self.refresh_token["token_type"]: str = "refresh"
-        self.refresh_token["access_token"] = self.access_token
+        self.refresh_token["access_token"] = str(self.access_token)
         self.refresh_token["jti"] = str(uuid.uuid4())
-        self.refresh_token["lifetime"] = timedelta(seconds=access_lifetime) + timedelta(
-            seconds=refresh_lifetime
-        )
+        self.refresh_token["lifetime"] = (
+            self.access_token.lifetime + timedelta(seconds=refresh_lifetime)
+        ).total_seconds()
 
         return {
             "access": str(self.access_token),
@@ -39,7 +48,7 @@ class TokenManager:
             "refresh_expires": self.refresh_token["exp"],
         }
 
-    def refresh_access_token(self, refresh_token_str: str) -> dict:
+    def refresh_access_token(self, access_lifetime: int | None = 86400) -> dict:
         """
         Updating the access token wrought  refresh token
         """
@@ -49,13 +58,13 @@ class TokenManager:
             if str(refresh["user_id"]) != str(self.user.id):
                 raise ValueError("Token does not belong to this user")
 
-            new_access = CustomAccessToken.for_user(self.user)
+            new_access = CustomAccessToken.for_user(self.user, lifetime=access_lifetime)
 
             refresh["access_token"] = new_access
-
+            dcode = DcodeManager()
             return {
-                "access": str(new_access),
-                "refresh": str(refresh),
+                "access": dcode.str_to_bynary(json.dumps(new_access)),
+                "refresh": dcode.str_to_bynary(json.dumps(refresh)),
                 "access_expires": new_access["exp"],
             }
         except Exception as e:

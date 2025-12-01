@@ -33,6 +33,7 @@ class DcodeManager:
             log.error(test_error)
             raise test_error
 
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjU4NjYwLCJpYXQiOjE3NjQ1NzIyNjAsImp0aSI6IjdmODFkOWU3YTlkMzQ4YmY5ZjJiODM1MWYyZmM4Y2Q0IiwiZW1haWwiOiJnS1VAbWFpbC5ydSJ9.9FxcnAQh97LU54hOjUgPMjjZ8vFgI1XkcXk6LnvlzTw'
     def bynary_to_str(self, context: str) -> str:
         """
         This is function is works with string

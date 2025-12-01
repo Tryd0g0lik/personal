@@ -18,17 +18,17 @@ class Cookies:
     Cookies
     """
 
-    def __init__(self, session_key_user: str, response: Response):
+    def __init__(self,response: Response):
         """
 
         :param str session_key_user: It's cookie's key by which can be will find needed content
         :param HttpResponse response:
         """
         self.response = response
-        self.session_key_user = session_key_user
 
-    def session_user(
+    def cookie_create(
         self,
+        cookie_key: str,
         value: str = None,
         max_age_=SESSION_COOKIE_AGE,
         httponly_=SESSION_COOKIE_HTTPONLY,
@@ -36,7 +36,7 @@ class Cookies:
         samesite_=SESSION_COOKIE_SAMESITE,
     ) -> HttpResponse:
         self.response.set_cookie(
-            self.session_key_user,
+            cookie_key,
             value,
             max_age=max_age_,
             httponly=httponly_,

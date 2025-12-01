@@ -14,7 +14,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from rest_framework import serializers
 from django.core.validators import validate_email
 
-from person.jwt.person_jwt_manager import TokenManager
+# from person.jwt.person_jwt_manager import TokenManager
 from person.models import User
 from person.models_person.model_business import BusinessElementModel
 from person.models_person.model_role import RoleModel

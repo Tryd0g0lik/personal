@@ -1,8 +1,10 @@
 import asyncio
+import json
 import logging
 
 from adrf import viewsets
-from celery import group
+
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_yasg.utils import swagger_auto_schema
@@ -10,12 +12,15 @@ from drf_yasg.utils import swagger_auto_schema
 from logs import configure_logging
 from person.models import User
 from django.contrib.auth.models import AnonymousUser
+
+from person.permissions import is_all, is_active
 from person.views_api.serializers import UserSerializer, ProfileSerializer
 from drf_yasg import openapi
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status, authentication
 
+from project.cookies import Cookies
 from project.settings import IS_SUPERUSER, IS_ADMIN
 
 log = logging.getLogger(__name__)
@@ -134,6 +139,7 @@ class UserViews(viewsets.ModelViewSet):
         """
         This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
         THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
+
         If the field of role does not has the name - "user" or "visitor", it means a user has permission from the staff
         In moment of registration:
          - we fill the username's field - the text from the email address;
@@ -142,40 +148,50 @@ class UserViews(viewsets.ModelViewSet):
          The 'superuser' has a quantity only 1 - by the default value.
          The 'admin' has a quantity before 4 - by default value.
          We can change this quantity in the '.env' file. It's variable 'IS_ADMIN' & 'IS_SUPERUSER'.
-
+        "visitor" - this is Anonymous. His does not has the access.
+        "user" -  user allows access for - reade and create.
 
 
         :param request:
         :return:
         """
+        from django.contrib.auth.models import Group
+        from rest_framework import status
+
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.create.__name__)
         user = request.user if request.user else AnonymousUser()
         data = request.data
         role = data.get("role")
         response = Response()
-        if user.is_anonymous:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        if user.is_anonymous or is_all(request) or user.is_admin:
             try:
                 text_log += " User created failed."
                 log.info(text_log)
                 response.data = {"data": "User creates failed."}
-                response.status_code = status.HTTP_401_UNAUTHORIZED
+
                 # CHECK - VALID DATA
                 # is staff
                 serializer = self.serializer_class(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
+                    # ==== USER ====
                     # User is creating
                     await serializer.asave()
                     u = await asyncio.to_thread(
                         lambda: User.objects.get(email=data["email"])
                     )
-                    # THis is , where is the user added in a group
-                    u.groups.add(f"{role}_group".capitalize())
+                    # ==== GROUP & ROLE ====
+                    # THis is , where is the user added in a group (and a group is creating or created)
+                    rl = f"{role}_group".capitalize()
+                    g, is_true = await Group.objects.aget_or_create(name=rl)
+                    await u.groups.aadd(g)
                     # This is, where user get the permission as a staff
                     is_staff = role not in ["user", "visitor"]
                     u.is_staff = is_staff
 
                     if role == "superuser":
+                        # Check - the superuser was created before or nor
                         superuser_list = await asyncio.to_thread(
                             lambda: User.objects.filter(is_superuser=True)
                         )
@@ -183,6 +199,7 @@ class UserViews(viewsets.ModelViewSet):
                         if len(superuser_list) == int(IS_SUPERUSER):
                             return response
                     elif role == "admin":
+                        # Check the quantity of 'admin'
                         admin_list = await asyncio.to_thread(
                             lambda: User.objects.filter(is_admin=True)
                         )
@@ -191,8 +208,9 @@ class UserViews(viewsets.ModelViewSet):
                             return response
 
                     await u.asave()
+
                     response.data = {"data": "User created successfully"}
-                    response.status_code = status.HTTP_200_OK
+                    response.status_code = status.HTTP_201_CREATED
                     return response
                 return response
             except Exception as error:
@@ -225,47 +243,89 @@ class UserViews(viewsets.ModelViewSet):
 
 
 class ProfileViewSet(viewsets.ViewSet):
+    """ "
+        Cooockie содержит два токенаЖ
+        - access;
+        - refresh;
+        :return ```text
+         "data": {
+            "email": "gKU@mail.ru",
+            "role": "staff",
+            "last_login": null,
+            "is_superuser": false,
+            "is_staff": false,
+            "username": null,
+            "first_name": null,
+            "last_name": null,
+            "password_hash": null,
+            "is_sent": false,
+            "is_active": false,
+            "is_verified": false,
+            "is_admin": false,
+            "verification_code": null,
+            "groups": [],
+            "user_permissions": []
+        },
+        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjYxNzY0LCJpYXQiOjE3NjQ1NzUzNjQsImp0aSI6IjlmYzQ2MTJmZGQyNjRkZDU4YjE2ODcyOThjNDNjYWZiIiwiZW1haWwiOiJnS1VAbWFpbC5ydSJ9.WBUR-S_GW49GJqwf1I31-hdR92uIuhOD3xu78jmpzNI",
+        "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2MTc2NCwiaWF0IjoxNzY0NTc1MzY0LCJqdGkiOiJiOWE5MDAwOC0wOGJkLTQzMDAtYThkZS1iNWIyOTZiZmJkNWYiLCJ1c2VyX2lkIjoiNWRmNmI5NTktYzBlNy00OGQyLWFhMGItZTEyYjNlNDVlNWMwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZeE56WTBMQ0pwWVhRaU9qRTNOalExTnpVek5qUXNJbXAwYVNJNklqbG1ZelEyTVRKbVpHUXlOalJrWkRVNFlqRTJPRGN5T1Roak5ETmpZV1ppSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSjkuV0JVUi1TX0dXNDlHSnF3ZjFJMzEtaGRSOTJ1SXVoT0QzeHU3OGptcHpOSSIsImxpZmV0aW1lIjo4NjQzMDAuMH0.DAYsMJe_GYJql5T2Dw1Bbv9HS3NwiWXoLOncWYROsyY",
+        "access_expires": 1764661764,
+        "refresh_expires": 1764661764
+    }
+    ```
+    """
+
     @method_decorator(ensure_csrf_cookie)
     async def active(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
-        user = request.user if request.user else AnonymousUser()
         data = request.data
 
         response = Response()
 
-        if user.is_anonymous:
+        if not is_active(request):
             try:
-                # serializer = self.serializer_class(data=data)
                 serializer = ProfileSerializer(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
-                    # u = User.objects.get(email=data.get("email"))
-                    # u.is_active = True
-                    #
-                    # добавить пользователя в группу (group_имя_роли) при регистрации
-                    # тобавить токены
-                    # из header Authorization: Bearer {user_token},
+                    u = await User.objects.aget(email=data.get("email"))
+                    u.is_active = True
+                    await u.asave()
+                    tokens = u.create_token()
+
+                    kwarg = await serializer.adata
+                    kwarg.pop("password")
+                    c = Cookies(response)
+                    c.cookie_create(
+                        cookie_key="access",
+                        value=tokens.__getitem__("access"),
+                        max_age_=tokens.__getitem__("access_expires"),
+                    )
+                    c.cookie_create(
+                        cookie_key="refresh",
+                        value=tokens.__getitem__("refresh"),
+                        max_age_=tokens.__getitem__("refresh_expires"),
+                    )
+
                     # не работает CSRFToken
-                    # kwargs = {"is_active": True}
-                    # В request сразу присваивать request.user перед обработкой запроса в кастомном Middleware в Django
-                    await serializer.update(**kwargs)
-                    # c = Cookies(session_key_user="token_jwt", response=response)
-                    # tokens_str = json.dumps(tokens_dict)
-                    # c.session_user(value=tokens_str
+                    response.status_code = status.HTTP_200_OK
+                    response.data = {"data": kwarg, **tokens}
+                    return response
+
                 else:
                     text_log += " Data is invalid."
-                    log.info(text_log)
+                    log.info(f"{text_log} Status code {status.HTTP_401_UNAUTHORIZED}")
                     response.data = {"data": text_log}
                     response.status_code = status.HTTP_401_UNAUTHORIZED
                     return response
             except Exception as error:
                 text_log += f"ERROR => {error.args[0]}"
-                log.error(text_log)
+                log.info(
+                    f"{text_log} Statuys code: {status.HTTP_500_INTERNAL_SERVER_ERROR}"
+                )
                 response.data = {"errors": text_log}
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                 return response
         text_log += " User was activated before this."
-        log.info(text_log)
+        log.info(f"{text_log} Status code: {status.HTTP_401_UNAUTHORIZED}")
         response.data = {"data": text_log}
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return response
