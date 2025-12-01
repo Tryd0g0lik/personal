@@ -16,6 +16,8 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status, authentication
 
+from project.settings import IS_SUPERUSER, IS_ADMIN
+
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
 
@@ -132,7 +134,16 @@ class UserViews(viewsets.ModelViewSet):
         """
         This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
         THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
-        In moment of registration, we fill the username's field by the text from the email address.
+        If the field of role does not has the name - "user" or "visitor", it means a user has permission from the staff
+        In moment of registration:
+         - we fill the username's field - the text from the email address;
+         - user is adding to the group. Group name is formed as a "< Rolename >_group";
+         - the 'superuser' could be only one/single useer.
+         The 'superuser' has a quantity only 1 - by the default value.
+         The 'admin' has a quantity before 4 - by default value.
+         We can change this quantity in the '.env' file. It's variable 'IS_ADMIN' & 'IS_SUPERUSER'.
+
+
 
         :param request:
         :return:
@@ -144,6 +155,10 @@ class UserViews(viewsets.ModelViewSet):
         response = Response()
         if user.is_anonymous:
             try:
+                text_log += " User created failed."
+                log.info(text_log)
+                response.data = {"data": "User creates failed."}
+                response.status_code = status.HTTP_401_UNAUTHORIZED
                 # CHECK - VALID DATA
                 # is staff
                 serializer = self.serializer_class(data=data)
@@ -151,19 +166,34 @@ class UserViews(viewsets.ModelViewSet):
                 if is_valid:
                     # User is creating
                     await serializer.asave()
-                    is_staff = role not in ["user", "visitor"]
                     u = await asyncio.to_thread(
                         lambda: User.objects.get(email=data["email"])
                     )
-
+                    # THis is , where is the user added in a group
+                    u.groups.add(f"{role}_group".capitalize())
+                    # This is, where user get the permission as a staff
+                    is_staff = role not in ["user", "visitor"]
                     u.is_staff = is_staff
+
+                    if role == "superuser":
+                        superuser_list = await asyncio.to_thread(
+                            lambda: User.objects.filter(is_superuser=True)
+                        )
+                        # The 'superuser' could be only one/single useer.
+                        if len(superuser_list) == int(IS_SUPERUSER):
+                            return response
+                    elif role == "admin":
+                        admin_list = await asyncio.to_thread(
+                            lambda: User.objects.filter(is_admin=True)
+                        )
+                        # The 'superuser' could be only one/single useer.
+                        if len(admin_list) == int(IS_ADMIN):
+                            return response
+
                     await u.asave()
                     response.data = {"data": "User created successfully"}
+                    response.status_code = status.HTTP_200_OK
                     return response
-                text_log += " User created failed."
-                log.info(text_log)
-                response.data = {"data": "User creates failed."}
-                response.status_code = status.HTTP_401_UNAUTHORIZED
                 return response
             except Exception as error:
                 text_log += f"ERROR => {error.args[0]}"
@@ -212,7 +242,12 @@ class ProfileViewSet(viewsets.ViewSet):
                     # u = User.objects.get(email=data.get("email"))
                     # u.is_active = True
                     #
-                    kwargs = {"is_active": True}
+                    # добавить пользователя в группу (group_имя_роли) при регистрации
+                    # тобавить токены
+                    # из header Authorization: Bearer {user_token},
+                    # не работает CSRFToken
+                    # kwargs = {"is_active": True}
+                    # В request сразу присваивать request.user перед обработкой запроса в кастомном Middleware в Django
                     await serializer.update(**kwargs)
                     # c = Cookies(session_key_user="token_jwt", response=response)
                     # tokens_str = json.dumps(tokens_dict)

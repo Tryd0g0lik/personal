@@ -73,6 +73,12 @@ SESSION_COOKIE_SAMESITE = "Lax"  # CSRF_COOKIE_SAMESITE = 'Lax'  # or 'Strict'
 CSRF_USE_SESSIONS = False
 SESSION_COOKIE_AGE = 86400
 
+# ''' Quantity of admin & superuser '''
+IS_ADMIN = os.getenv("IS_ADMIN", "4")
+IS_SUPERUSER = os.getenv("IS_SUPERUSER", "1")
+
+
+
 # ''' CHOICES '''
 AUTHENTIFICATION_STATUS = [
     ("-------", _("-------")),  # Value by default

@@ -109,8 +109,10 @@ class User(BaseModel, AbstractUser):
 to user's email. User indicates his email at the registrations moment."
         ),
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+
     verification_code = models.CharField(
         _("verification_code"),
         max_length=150,
