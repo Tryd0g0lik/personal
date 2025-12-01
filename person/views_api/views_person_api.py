@@ -75,61 +75,7 @@ class UserViews(viewsets.ModelViewSet):
             },
         ),
         responses={
-            201: openapi.Response(
-                description="Данные на выходе",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "id": openapi.Schema(
-                            example="da7611fc-87f4-42aa-9019-956a8824f1cb",
-                            type=openapi.TYPE_STRING,
-                        ),
-                        "email": openapi.Schema(
-                            example="email@my.ry",
-                            type=openapi.TYPE_STRING,
-                        ),
-                        "username": openapi.Schema(
-                            example="nH2qGiehvEXjNiYqp3bOVtAYv....",
-                            type=openapi.TYPE_STRING,
-                        ),
-                        "first_name": openapi.Schema(
-                            type=openapi.TYPE_STRING, example=""
-                        ),
-                        "last_name": openapi.Schema(
-                            type=openapi.TYPE_STRING, example="null"
-                        ),
-                        "last_login": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example="2025-07-20 00:39:14.739 +0700",
-                        ),
-                        "is_superuser": openapi.Schema(
-                            type=openapi.TYPE_BOOLEAN,
-                            example=False,
-                        ),
-                        "is_staff": openapi.Schema(
-                            type=openapi.TYPE_BOOLEAN,
-                            example=False,
-                            description="user got permissions how superuser or not.",
-                        ),
-                        "is_active": openapi.Schema(
-                            type=openapi.TYPE_BOOLEAN,
-                            example=False,
-                        ),
-                        "updated_at": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example="2025-07-20 00:39:14.739 +0700",
-                        ),
-                        "created_at": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example="2025-07-20 00:39:14.739 +0700",
-                        ),
-                        "status": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example="-------",
-                        ),
-                    },
-                ),
-            ),
+            201: "OK",
             401: "Not Ok",
             500: "Something what wrong. Read the response variable 'data'",
         },
@@ -243,39 +189,151 @@ class UserViews(viewsets.ModelViewSet):
 
 
 class ProfileViewSet(viewsets.ViewSet):
-    """ "
-        Cooockie содержит два токенаЖ
-        - access;
-        - refresh;
-        :return ```text
-         "data": {
-            "email": "gKU@mail.ru",
-            "role": "staff",
-            "last_login": null,
-            "is_superuser": false,
-            "is_staff": false,
-            "username": null,
-            "first_name": null,
-            "last_name": null,
-            "password_hash": null,
-            "is_sent": false,
-            "is_active": false,
-            "is_verified": false,
-            "is_admin": false,
-            "verification_code": null,
-            "groups": [],
-            "user_permissions": []
-        },
-        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjYxNzY0LCJpYXQiOjE3NjQ1NzUzNjQsImp0aSI6IjlmYzQ2MTJmZGQyNjRkZDU4YjE2ODcyOThjNDNjYWZiIiwiZW1haWwiOiJnS1VAbWFpbC5ydSJ9.WBUR-S_GW49GJqwf1I31-hdR92uIuhOD3xu78jmpzNI",
-        "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2MTc2NCwiaWF0IjoxNzY0NTc1MzY0LCJqdGkiOiJiOWE5MDAwOC0wOGJkLTQzMDAtYThkZS1iNWIyOTZiZmJkNWYiLCJ1c2VyX2lkIjoiNWRmNmI5NTktYzBlNy00OGQyLWFhMGItZTEyYjNlNDVlNWMwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZeE56WTBMQ0pwWVhRaU9qRTNOalExTnpVek5qUXNJbXAwYVNJNklqbG1ZelEyTVRKbVpHUXlOalJrWkRVNFlqRTJPRGN5T1Roak5ETmpZV1ppSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSjkuV0JVUi1TX0dXNDlHSnF3ZjFJMzEtaGRSOTJ1SXVoT0QzeHU3OGptcHpOSSIsImxpZmV0aW1lIjo4NjQzMDAuMH0.DAYsMJe_GYJql5T2Dw1Bbv9HS3NwiWXoLOncWYROsyY",
-        "access_expires": 1764661764,
-        "refresh_expires": 1764661764
-    }
-    ```
-    """
 
-    @method_decorator(ensure_csrf_cookie)
+    @swagger_auto_schema(
+        # operation_description="""
+        #
+        #
+        #                 """,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            title="UserActivate",
+            in_=openapi.IN_FORM,
+            required=[
+                "email",
+                "password",
+            ],
+            properties={
+                "email": openapi.Schema(
+                    example="<user_email>", type=openapi.TYPE_STRING
+                ),
+                "password": openapi.Schema(
+                    example="nH2qGiehvEXjNiYqp3bOVtAYv....", type=openapi.TYPE_STRING
+                ),
+            },
+        ),
+        responses={
+            201: openapi.Response(
+                description="Данные на выходе",
+                headers={
+                    "Set-Cookie": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="Access и refresh токены в cookies",
+                        examples={
+                            "access_token": {
+                                "summary": "Access токен",
+                                "value": "access=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...; Path=/; HttpOnly; Secure; SameSite=Lax",
+                            },
+                            "refresh_token": {
+                                "summary": "Refresh токен",
+                                "value": "refresh=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...; Path=/; HttpOnly; Secure; SameSite=Lax",
+                            },
+                        },
+                    )
+                },
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "email": openapi.Schema(
+                            example="email@my.ry",
+                            type=openapi.TYPE_STRING,
+                        ),
+                        "username": openapi.Schema(
+                            example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+                            type=openapi.TYPE_STRING,
+                        ),
+                        "first_name": openapi.Schema(
+                            type=openapi.TYPE_STRING, example=""
+                        ),
+                        "last_name": openapi.Schema(
+                            type=openapi.TYPE_STRING, example="null"
+                        ),
+                        "last_login": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="2025-07-20 00:39:14.739 +0700",
+                        ),
+                        "role": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="staff",
+                        ),
+                        "is_superuser": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                        ),
+                        "is_admin": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                        ),
+                        "is_staff": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                            description="user got permissions how superuser or not.",
+                        ),
+                        "is_active": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                        ),
+                        "is_sent": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                        ),
+                        "is_verified": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            example=False,
+                        ),
+                        "updated_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="2025-07-20 00:39:14.739 +0700",
+                        ),
+                        "created_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="2025-07-20 00:39:14.739 +0700",
+                        ),
+                        "status": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="-------",
+                        ),
+                        # "groups": [str],
+                        # "user_permissions": [any]
+                    },
+                ),
+            ),
+            401: "Not Ok",
+            500: "Something what wrong. Read the response variable 'data'",
+        },
+        tags=["person"],
+    )
     async def active(self, request: Request, *args, **kwargs) -> Response:
+        """ "
+            Cooockie содержит два токенаЖ
+            - access;
+            - refresh;
+            :return ```text
+             "data": {
+                "email": "gKU@mail.ru",
+                "role": "staff",
+                "last_login": null,
+                "is_superuser": false,
+                "is_staff": false,
+                "username": null,
+                "first_name": null,
+                "last_name": null,
+                "password_hash": null,
+                "is_sent": false,
+                "is_active": false,
+                "is_verified": false,
+                "is_admin": false,
+                "verification_code": null,
+                "groups": [],
+                "user_permissions": []
+            },
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjYxNzY0LCJpYXQiOjE3NjQ1NzUzNjQsImp0aSI6IjlmYzQ2MTJmZGQyNjRkZDU4YjE2ODcyOThjNDNjYWZiIiwiZW1haWwiOiJnS1VAbWFpbC5ydSJ9.WBUR-S_GW49GJqwf1I31-hdR92uIuhOD3xu78jmpzNI",
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2MTc2NCwiaWF0IjoxNzY0NTc1MzY0LCJqdGkiOiJiOWE5MDAwOC0wOGJkLTQzMDAtYThkZS1iNWIyOTZiZmJkNWYiLCJ1c2VyX2lkIjoiNWRmNmI5NTktYzBlNy00OGQyLWFhMGItZTEyYjNlNDVlNWMwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZeE56WTBMQ0pwWVhRaU9qRTNOalExTnpVek5qUXNJbXAwYVNJNklqbG1ZelEyTVRKbVpHUXlOalJrWkRVNFlqRTJPRGN5T1Roak5ETmpZV1ppSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSjkuV0JVUi1TX0dXNDlHSnF3ZjFJMzEtaGRSOTJ1SXVoT0QzeHU3OGptcHpOSSIsImxpZmV0aW1lIjo4NjQzMDAuMH0.DAYsMJe_GYJql5T2Dw1Bbv9HS3NwiWXoLOncWYROsyY",
+            "access_expires": 1764661764,
+            "refresh_expires": 1764661764
+        }
+        ```
+        """
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
         data = request.data
 
@@ -293,14 +351,16 @@ class ProfileViewSet(viewsets.ViewSet):
 
                     kwarg = await serializer.adata
                     kwarg.pop("password")
+                    kwarg.pop("password_hash")
+                    kwarg.pop("verification_code")
                     c = Cookies(response)
                     c.cookie_create(
-                        cookie_key="access",
+                        cookie_key="access_token",
                         value=tokens.__getitem__("access"),
                         max_age_=tokens.__getitem__("access_expires"),
                     )
                     c.cookie_create(
-                        cookie_key="refresh",
+                        cookie_key="refresh_token",
                         value=tokens.__getitem__("refresh"),
                         max_age_=tokens.__getitem__("refresh_expires"),
                     )

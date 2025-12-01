@@ -37,6 +37,7 @@ class CustomAccessToken(AccessToken):
         if not self.user:
             return
         self["email"] = self.user.email
+        self["id"] = self.user.id
 
         self.__setattr__("token_type", "access")
         self.__setattr__("iat", datetime.now())
