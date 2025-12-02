@@ -3,12 +3,10 @@ project/person_jwt_access_token.py
 """
 
 import uuid
-from typing import Optional
 
 from rest_framework_simplejwt.tokens import AccessToken, T
 from rest_framework_simplejwt.tokens import Token
-from datetime import datetime, timedelta, date
-from django.apps import apps
+from datetime import datetime, timedelta
 from rest_framework_simplejwt.utils import aware_utcnow
 
 

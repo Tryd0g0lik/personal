@@ -1,3 +1,7 @@
+"""
+person/models_person/model_basic.py
+"""
+
 import uuid
 from django.db import models
 

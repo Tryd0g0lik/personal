@@ -3,13 +3,10 @@ person/models_person/model_black.py
 """
 
 from django.core.validators import (
-    MinLengthValidator,
-    MaxLengthValidator,
     RegexValidator,
     EmailValidator,
 )
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from person.models_person.model_basic import BaseModel
 
 

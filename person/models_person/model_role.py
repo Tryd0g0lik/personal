@@ -71,38 +71,6 @@ class AccessRolesModel(BaseModel):
         null=True,
         blank=True,
     )
-    #
-    # read_permission = models.BooleanField(
-    #     default=False, db_column="read_permission", help_text=_("Read only own element")
-    # )
-    # read_all_permission = models.BooleanField(
-    #     default=False,
-    #     db_column="read_all_permission",
-    #     help_text=_("Read all user's elements"),
-    # )
-    # create_permission = models.BooleanField(
-    #     default=False, db_column="create_permission", help_text=_("Create new element")
-    # )
-    # update_permission = models.BooleanField(
-    #     default=False,
-    #     db_column="update_permission",
-    #     help_text=_("Update only own element"),
-    # )
-    # update_all_permission = models.BooleanField(
-    #     default=False,
-    #     db_column="update_all_permission",
-    #     help_text=_("Update all user's elements"),
-    # )
-    # delete_permission = models.BooleanField(
-    #     default=False,
-    #     db_column="delete_permission",
-    #     help_text=_("Delete only own element"),
-    # )
-    # delete_all_permission = models.BooleanField(
-    #     default=False,
-    #     db_column="delete_all_permission",
-    #     help_text=_("Delete all user's elements"),
-    # )
 
     class Meta:
         db_table = "access_roles"

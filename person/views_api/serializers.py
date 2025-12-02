@@ -3,18 +3,14 @@ person/models_person/serializers.py
 """
 
 import logging
-import asyncio
 import re
-from typing import Optional, List
+from typing import Optional
 
 from adrf.serializers import ModelSerializer
 from django.core.exceptions import ValidationError
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from rest_framework import serializers
 from django.core.validators import validate_email
 
-# from person.jwt.person_jwt_manager import TokenManager
 from person.models import User
 from person.models_person.model_black import BlackListModel
 from person.models_person.model_business import BusinessElementModel

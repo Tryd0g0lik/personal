@@ -4,6 +4,7 @@ person/views_api/views_person_api.py
 
 import asyncio
 import logging
+
 from adrf import viewsets
 
 from drf_yasg.utils import swagger_auto_schema
@@ -12,6 +13,7 @@ from logs import configure_logging
 from person.models import User
 from django.contrib.auth.models import AnonymousUser
 
+from person.models_person.model_black import BlackListModel
 from person.permissions import is_all, is_active, is_owner
 from person.views_api.serializers import UserSerializer, ProfileSerializer
 from drf_yasg import openapi
@@ -171,11 +173,49 @@ class UserViews(viewsets.ModelViewSet):
         return response
 
     async def list(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.list.__name__)
+        if not is_active(request):
+            response = Response()
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
         response = await super().alist(*args, **kwargs)
         if isinstance(response.data, list):
             response.data[0].pop("password")
         if isinstance(response.data, dict):
             response.data.pop("password")
+        return response
+
+    async def update(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
+        response = Response()
+        if not is_active(request):
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
+        # FREEZING
+        k = list(kwargs.keys())[0]
+        v = list(kwargs.values())[0]
+        u_list = User.objects.filter(k=v)
+        if not u_list.exists():
+            text_log += " Data was not found"
+            log.info(text_log)
+            response.status_code = status.HTTP_404_NOT_FOUND
+            response.data = {"data", text_log}
+            return response
+        u = u_list.first()
+        if is_owner(request, u) or request.user.is_admin or is_all(request):
+            response = await super().aupdate(request, args, kwargs)
+
+            return response
+        text_log += " you do not have sufficient rights"
+        log.info(text_log)
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.data = {"data", text_log}
         return response
 
     async def retrieve(self, request: Request, *args, **kwargs) -> Response:
@@ -187,25 +227,128 @@ class UserViews(viewsets.ModelViewSet):
             response.data.pop("password")
         return response
 
-    async def destroy(self, request: Request, pk, **kwargs) -> Response:
-        """
-         You wil can deactivate the user account only if you is:
+    @swagger_auto_schema(
+        operation_description="""
+        METHOD: DELETE.
+        description: You wil can delete the user account only if is:
             - owner;
             - admin;
             - superuser;
+        In the delete event, the user is added to the 'BlackListSerializer' db.
+        Fully from the database - the user's account can only be deleted by a user with superuser or administrator rights.
+
+        A window of time is likely needed to restore the account.
+
+        Currently, the account is being returned to the user with the administrator's assistance.
+        """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="id",
+                title="Pathname",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                example="c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+            ),
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="access_token",
+                title="Access Token",
+                type=openapi.TYPE_STRING,
+                required=["access_token"],
+                in_="cookie",
+                description="JWT Access Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="refresh_token",
+                title="Refresh Token",
+                type=openapi.TYPE_STRING,
+                required=["refresh_token"],
+                in_="cookie",
+                description="JWT Refresh Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+        ],
+        responses={
+            200: "OK",
+            401: "Not OK - you do not have sufficient rights",
+            404: " User does not exist.",
+            500: "IERROR => ...",
+        },
+        tags=["person"],
+    )
+    async def destroy(self, request: Request, *args, **kwargs) -> Response:
+        """
+        TODO: Прочитать 'TODO' из 'person.views_api.views_person_api.ProfileViewSet.active'
         :param request:
         :param args:
         :param kwargs:
         :return:
         """
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.destroy.__name__)
         response = Response()
-        u_list = User.objects.filter(id=pk)
+        if not is_active(request):
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
+
+        u_list = User.objects.filter(id=kwargs["pk"])
         u = await u_list.afirst()
+        if not u:
+            # Check a pk
+            text_log += " User does not exist."
+            log.info(text_log)
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return response
+
+        # FREEZING
+        black_list = BlackListModel.objects.filter(email=u.email)
         if (
-            (u_list.exists() and is_active(request) and pk and is_owner(request, u))
-            or is_all(request)
-        ) or request.user.is_admin:
-            pass
+            not black_list.exists()
+            and kwargs["pk"]
+            and is_owner(request, u)
+            or request.user.is_admin
+        ):
+            try:
+                u = await User.objects.aget(id=kwargs["pk"])
+                u.is_active = False
+                b = BlackListModel(email=u.email)
+                await u.asave(update_fields=["is_active"])
+                await b.asave()
+                response.data = {"data", "OK"}
+                response.status_code = status.HTTP_200_OK
+            except Exception as e:
+                text_e = "%s ERROR => %s" % (text_log, e.args[0])
+                log.error(text_e)
+                response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                response.data = {"errors", text_e}
+            return response
+        elif black_list.exists() and (request.user.is_admin or is_all(request)):
+            # DELETE
+            try:
+                await User.objects.filter(id=u.email).adelete()
+                await BlackListModel.objects.get(email=u.email).adelete()
+                response.data = {"data", "Removed successfully"}
+                response.status_code = status.HTTP_200_OK
+                return response
+            except Exception as e:
+                text_e = "%s ERROR => %s" % (text_log, e.args[0])
+                log.error(text_e)
+                response.data = {"errors", text_e}
+                response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                return response
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.data = {"data", "Not OK - you do not have sufficient rights"}
+        return response
 
 
 class ProfileViewSet(viewsets.ViewSet):
@@ -331,6 +474,14 @@ class ProfileViewSet(viewsets.ViewSet):
     )
     async def active(self, request: Request, *args, **kwargs) -> Response:
         """ "
+            TODO: Для 'BlackListModel' наладить CRUD для возвращения пользователю аккаунт.
+                Запрос на удаление аккаунта, добавляет аккаунт в чёрный список - 'BlackListModel' db. После,
+                 пользователь не может авторизоваться.
+                Повторный запрос на удаление аккаунта (от пользователя с правами администратора и супервользователя)
+                удаляет аккаунт из db.
+            Если раннее проводилась попытка - удалить аккаунт, необходимы права \
+             администратора - удалить (вручную) email из 'BlackListModel' db.
+             После этого пользователь может активироваться.
             Cooockie содержит два токенаЖ
             - access;
             - refresh;
@@ -369,16 +520,18 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
         data = request.data
-
+        email = data.get("email")
+        black_list = BlackListModel.objects.filter(**email)
         response = Response()
 
-        if not is_active(request):
+        if not black_list.exists() and not is_active(request):
             try:
                 # ==== CHECK EMAIL & PASSWORD
                 serializer = ProfileSerializer(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
-                    u = await User.objects.aget(email=data.get("email"))
+
+                    u = await User.objects.aget(**email)
                     u.is_active = True
                     await u.asave(
                         update_fields=[
@@ -409,6 +562,7 @@ class ProfileViewSet(viewsets.ViewSet):
                     # не работает CSRFToken
                     response.status_code = status.HTTP_200_OK
                     response.data = {"data": kwarg, **tokens}
+
                     return response
 
                 else:
@@ -448,7 +602,7 @@ class ProfileViewSet(viewsets.ViewSet):
                 title="Pathname",
                 in_=openapi.IN_PATH,
                 type=openapi.TYPE_STRING,
-                example="c4ebb722_930d_4ad9_ad1e_237eb4b41c70",
+                example="c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
             ),
             openapi.Parameter(
                 name="X-CSRFToken",
@@ -485,12 +639,21 @@ class ProfileViewSet(viewsets.ViewSet):
         tags=["person"],
     )
     async def inactive(self, request: Request, pk: str, **kwargs) -> Response:
+        text_log = "[%s.%s]" % (
+            self.__class__.__name__,
+            self.inactive.__name__,
+        )
         response = Response()
+        if not is_active(request):
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
         u_list = User.objects.filter(id=pk)
         u = await u_list.afirst()
         if (
-            (u_list.exists() and is_active(request) and pk and is_owner(request, u))
-            or is_all(request)
+            (u_list.exists() and pk and is_owner(request, u)) or is_all(request)
         ) or request.user.is_admin:
             try:
                 # Change db

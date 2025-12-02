@@ -16,8 +16,6 @@ import logging
 from pathlib import Path
 from datetime import timedelta
 from django.utils.translation import gettext_lazy as _
-from poetry.console.commands import self
-
 from logs import configure_logging
 
 dotenv.load_dotenv()
@@ -532,6 +530,3 @@ WAGTAILSEARCH_BACKENDS = {
     "default": {"BACKEND": "wagtail.search.backends.elasticsearch8", "INDEX": "myapp"}
 }
 WAGTAILADMIN_BASE_URL = CORS_ALLOWED_ORIGINS[0]
-# except Exception as e:
-#     text_e = "[%s]: %s" % (__name__, e.args[0])
-#     log.error(text_e)
