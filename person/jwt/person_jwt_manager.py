@@ -25,8 +25,6 @@ class TokenManager:
         :param refresh_lifetime: seconds - the time of the token's refresh
         :return:
         """
-        from django.core.serializers import get_serializer
-
         self.refresh_token = RefreshToken.for_user(self.user)
         self.access_token = CustomAccessToken.for_user(
             self.user, lifetime=access_lifetime
