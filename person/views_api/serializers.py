@@ -16,6 +16,7 @@ from django.core.validators import validate_email
 
 # from person.jwt.person_jwt_manager import TokenManager
 from person.models import User
+from person.models_person.model_black import BlackListModel
 from person.models_person.model_business import BusinessElementModel
 from person.models_person.model_role import RoleModel
 from logs import configure_logging
@@ -184,9 +185,7 @@ class RoleSerializer(ModelSerializer):
         read_only_fields = ("created_at",)
 
 
-type PersonUserSerializer = Optional[UserSerializer]
-type PersonBusinessSerializer = Optional[BusinessSerializer]
-type PersonRoleSerializer = Optional[RoleSerializer]
-type PersonSerializerList = Optional[
-    PersonUserSerializer, PersonBusinessSerializer, PersonRoleSerializer
-]
+class BlackListSerializer(ModelSerializer):
+    class Meta:
+        model = BlackListModel
+        fields = "__all__"

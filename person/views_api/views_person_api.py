@@ -187,6 +187,26 @@ class UserViews(viewsets.ModelViewSet):
             response.data.pop("password")
         return response
 
+    async def destroy(self, request: Request, pk, **kwargs) -> Response:
+        """
+         You wil can deactivate the user account only if you is:
+            - owner;
+            - admin;
+            - superuser;
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        response = Response()
+        u_list = User.objects.filter(id=pk)
+        u = await u_list.afirst()
+        if (
+            (u_list.exists() and is_active(request) and pk and is_owner(request, u))
+            or is_all(request)
+        ) or request.user.is_admin:
+            pass
+
 
 class ProfileViewSet(viewsets.ViewSet):
 
@@ -314,9 +334,6 @@ class ProfileViewSet(viewsets.ViewSet):
             Cooockie содержит два токенаЖ
             - access;
             - refresh;
-            Ниже представлен пример 'возврата'. В атрибуте 'id' ("`data['id']`") символ '-' измените на '_'  для \
-            обращения на сервер через 'id' пользователя. Ннапример для выхода из профиля это метод '`inactive`' и \
-             имя маршрута '`/api/v1/person/<str:pk>/inactive/`'
             :return ```text
              {
                 "data": {
@@ -416,9 +433,14 @@ class ProfileViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
         operation_description="""
+            You wil can deactivate the user account only if you is:
+            - owner;
+            - admin;
+            - superuser;
             Method: PATCH.
-            Pathname: Change a user 'id' from pathname. \
-            It's example: "c4ebb722-930d-4ad9-ad1e-237eb4b41c70" to the  "c4ebb722_930d_4ad9_ad1e_237eb4b41c70"
+            Pathname: Change a user 'id' from pathname.
+
+
                         """,
         manual_parameters=[
             openapi.Parameter(
@@ -464,12 +486,15 @@ class ProfileViewSet(viewsets.ViewSet):
     )
     async def inactive(self, request: Request, pk: str, **kwargs) -> Response:
         response = Response()
-        u_list = User.objects.filter(id=pk.replace("_", "-"))
+        u_list = User.objects.filter(id=pk)
         u = await u_list.afirst()
-        if u_list.exists() and is_active(request) and pk and is_owner(request, u):
+        if (
+            (u_list.exists() and is_active(request) and pk and is_owner(request, u))
+            or is_all(request)
+        ) or request.user.is_admin:
             try:
                 # Change db
-                u = await User.objects.aget(pk=pk.replace("_", "-"))
+                u = await User.objects.aget(pk=pk)
                 u.is_active = False
                 await u.asave(
                     update_fields=[

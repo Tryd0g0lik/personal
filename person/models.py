@@ -92,7 +92,6 @@ class User(BaseModel, AbstractUser):
         blank=True,
         null=True,
         validators=[
-            # MinLengthValidator(6),
             MaxLengthValidator(255),
             RegexValidator(regex="[A-Za-z0-9-_)(%]{6,255}$"),
         ],
