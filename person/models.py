@@ -8,7 +8,6 @@ from typing import Optional
 import bcrypt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
-    MinValueValidator,
     MinLengthValidator,
     MaxLengthValidator,
     RegexValidator,
@@ -16,7 +15,6 @@ from django.core.validators import (
 )
 from django.db import models
 
-# from pkg_resources import require
 
 from person.jwt.person_jwt_manager import TokenManager
 from person.models_person.model_basic import BaseModel
@@ -166,10 +164,10 @@ to user's email. User indicates his email at the registrations moment."
             access_lifetime=access_lifetime, refresh_lifetime=refresh_lifetime
         )
 
-    def verify_token(self, token_str: str) -> bool:
-        """Check the token"""
-        manager = self._get_token_manager()
-        return manager.verify_access_token(token_str)
+    # def verify_token(self, token_str: str) -> bool:
+    #     """Check the token"""
+    #     manager = self._get_token_manager()
+    #     return manager.verify_access_token(token_str)
 
     def save(self, *args, **kwargs):
         if not self.username:

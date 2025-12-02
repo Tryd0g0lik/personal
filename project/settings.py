@@ -240,6 +240,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "person.middleware.AuthenticationMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"

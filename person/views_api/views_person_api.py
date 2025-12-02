@@ -1,19 +1,18 @@
-import asyncio
-import json
-import logging
+"""
+person/views_api/views_person_api.py
+"""
 
+import asyncio
+import logging
 from adrf import viewsets
 
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_yasg.utils import swagger_auto_schema
 
 from logs import configure_logging
 from person.models import User
 from django.contrib.auth.models import AnonymousUser
 
-from person.permissions import is_all, is_active
+from person.permissions import is_all, is_active, is_owner
 from person.views_api.serializers import UserSerializer, ProfileSerializer
 from drf_yasg import openapi
 from rest_framework.response import Response
@@ -48,6 +47,7 @@ class UserViews(viewsets.ModelViewSet):
             openapi.Parameter(
                 name="X-CSRFToken",
                 title="X-CSRFToken",
+                required=["X-CSRFToken"],
                 in_=openapi.IN_HEADER,
                 type=openapi.TYPE_STRING,
                 example="nH2qGiehvEXjNiYqp3bOVtAYv....",
@@ -191,10 +191,6 @@ class UserViews(viewsets.ModelViewSet):
 class ProfileViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
-        # operation_description="""
-        #
-        #
-        #                 """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             title="UserActivate",
@@ -212,6 +208,16 @@ class ProfileViewSet(viewsets.ViewSet):
                 ),
             },
         ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+        ],
         responses={
             201: openapi.Response(
                 description="Данные на выходе",
@@ -308,30 +314,40 @@ class ProfileViewSet(viewsets.ViewSet):
             Cooockie содержит два токенаЖ
             - access;
             - refresh;
+            Ниже представлен пример 'возврата'. В атрибуте 'id' ("`data['id']`") символ '-' измените на '_'  для \
+            обращения на сервер через 'id' пользователя. Ннапример для выхода из профиля это метод '`inactive`' и \
+             имя маршрута '`/api/v1/person/<str:pk>/inactive/`'
             :return ```text
-             "data": {
-                "email": "gKU@mail.ru",
-                "role": "staff",
-                "last_login": null,
-                "is_superuser": false,
-                "is_staff": false,
-                "username": null,
-                "first_name": null,
-                "last_name": null,
-                "password_hash": null,
-                "is_sent": false,
-                "is_active": false,
-                "is_verified": false,
-                "is_admin": false,
-                "verification_code": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjYxNzY0LCJpYXQiOjE3NjQ1NzUzNjQsImp0aSI6IjlmYzQ2MTJmZGQyNjRkZDU4YjE2ODcyOThjNDNjYWZiIiwiZW1haWwiOiJnS1VAbWFpbC5ydSJ9.WBUR-S_GW49GJqwf1I31-hdR92uIuhOD3xu78jmpzNI",
-            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2MTc2NCwiaWF0IjoxNzY0NTc1MzY0LCJqdGkiOiJiOWE5MDAwOC0wOGJkLTQzMDAtYThkZS1iNWIyOTZiZmJkNWYiLCJ1c2VyX2lkIjoiNWRmNmI5NTktYzBlNy00OGQyLWFhMGItZTEyYjNlNDVlNWMwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZeE56WTBMQ0pwWVhRaU9qRTNOalExTnpVek5qUXNJbXAwYVNJNklqbG1ZelEyTVRKbVpHUXlOalJrWkRVNFlqRTJPRGN5T1Roak5ETmpZV1ppSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSjkuV0JVUi1TX0dXNDlHSnF3ZjFJMzEtaGRSOTJ1SXVoT0QzeHU3OGptcHpOSSIsImxpZmV0aW1lIjo4NjQzMDAuMH0.DAYsMJe_GYJql5T2Dw1Bbv9HS3NwiWXoLOncWYROsyY",
-            "access_expires": 1764661764,
-            "refresh_expires": 1764661764
-        }
+             {
+                "data": {
+                    "id": "c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+                    "email": "gKU@mail.ru",
+                    "role": "Role: staff",
+                    "last_login": null,
+                    "is_superuser": false,
+                    "is_staff": true,
+                    "date_joined": "2025-12-01T15:57:02.286616+07:00",
+                    "created_at": "2025-12-01T15:57:02.286726+07:00",
+                    "updated_at": "2025-12-01T15:57:40.922670+07:00",
+                    "username": "Gku",
+                    "first_name": null,
+                    "last_name": null,
+                    "status": "PROCESS",
+                    "refer": "c9b0fa36-210b-4095-8cb3-5b21bf04f953",
+                    "is_sent": false,
+                    "is_active": true,
+                    "is_verified": false,
+                    "is_admin": false,
+                    "groups": [
+                        3
+                    ],
+                    "user_permissions": []
+                },
+                "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjY4MjgzLCJpYXQiOjE3NjQ1ODE4ODMsImp0aSI6IjFlOTJkYTg2OTg2YzQ3MjhhMjk0OTdjZDM4NDA1ZDA1IiwiZW1haWwiOiJnS1VAbWFpbC5ydSIsImlkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIn0.u1JyXXHVFRvCnZIO95vRlLZ0-UbntTEFQUYQ5bOM2GM",
+                "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2ODI4MCwiaWF0IjoxNzY0NTgxODgwLCJqdGkiOiI2Y2I0MmE4NS0zYWY0LTQ1YWUtYTc4MC00YzUyODVkYzcwYjMiLCJ1c2VyX2lkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZNE1qZ3pMQ0pwWVhRaU9qRTNOalExT0RFNE9ETXNJbXAwYVNJNklqRmxPVEprWVRnMk9UZzJZelEzTWpoaE1qazBPVGRqWkRNNE5EQTFaREExSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSXNJbWxrSWpvaVl6UmxZbUkzTWpJdE9UTXdaQzAwWVdRNUxXRmtNV1V0TWpNM1pXSTBZalF4WXpjd0luMC51MUp5WFhIVkZSdkNuWklPOTV2UmxMWjAtVWJudFRFRlFVWVE1Yk9NMkdNIiwibGlmZXRpbWUiOjg2NDMwMC4wfQ.NLOYV52mIgX-axeuMLbMsAdFOTYWy4ZVlviwWZxWaY4",
+                "access_expires": 1764668283,
+                "refresh_expires": 1764668280
+            }
         ```
         """
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
@@ -341,18 +357,26 @@ class ProfileViewSet(viewsets.ViewSet):
 
         if not is_active(request):
             try:
+                # ==== CHECK EMAIL & PASSWORD
                 serializer = ProfileSerializer(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
                     u = await User.objects.aget(email=data.get("email"))
                     u.is_active = True
-                    await u.asave()
-                    tokens = u.create_token()
-
+                    await u.asave(
+                        update_fields=[
+                            "is_active",
+                        ]
+                    )
+                    # Get data for sending
+                    serializer = ProfileSerializer(u)
                     kwarg = await serializer.adata
+
                     kwarg.pop("password")
                     kwarg.pop("password_hash")
                     kwarg.pop("verification_code")
+                    # Get tokens
+                    tokens = u.create_token()
                     c = Cookies(response)
                     c.cookie_create(
                         cookie_key="access_token",
@@ -388,4 +412,101 @@ class ProfileViewSet(viewsets.ViewSet):
         log.info(f"{text_log} Status code: {status.HTTP_401_UNAUTHORIZED}")
         response.data = {"data": text_log}
         response.status_code = status.HTTP_401_UNAUTHORIZED
+        return response
+
+    @swagger_auto_schema(
+        operation_description="""
+            Method: PATCH.
+            Pathname: Change a user 'id' from pathname. \
+            It's example: "c4ebb722-930d-4ad9-ad1e-237eb4b41c70" to the  "c4ebb722_930d_4ad9_ad1e_237eb4b41c70"
+                        """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="id",
+                title="Pathname",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                example="c4ebb722_930d_4ad9_ad1e_237eb4b41c70",
+            ),
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="access_token",
+                title="Access Token",
+                type=openapi.TYPE_STRING,
+                required=["access_token"],
+                in_="cookie",
+                description="JWT Access Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="refresh_token",
+                title="Refresh Token",
+                type=openapi.TYPE_STRING,
+                required=["refresh_token"],
+                in_="cookie",
+                description="JWT Refresh Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+        ],
+        responses={
+            200: "OK. User was inactive - successfully",
+            401: "User was inactive before or something what wrong in the request",
+            500: "IERROR => ...",
+        },
+        tags=["person"],
+    )
+    async def inactive(self, request: Request, pk: str, **kwargs) -> Response:
+        response = Response()
+        u_list = User.objects.filter(id=pk.replace("_", "-"))
+        u = await u_list.afirst()
+        if u_list.exists() and is_active(request) and pk and is_owner(request, u):
+            try:
+                # Change db
+                u = await User.objects.aget(pk=pk.replace("_", "-"))
+                u.is_active = False
+                await u.asave(
+                    update_fields=[
+                        "is_active",
+                    ]
+                )
+                # The clear of cookie
+                c = Cookies(response)
+                c.cookie_create(
+                    cookie_key="access_token",
+                    value="",
+                    max_age_="0",
+                )
+                c.cookie_create(
+                    cookie_key="refresh_token",
+                    value="",
+                    max_age_="0",
+                )
+                # Create - a response
+                response.__setattr__("data", "OK. User was inactive - successfully")
+                response.__setattr__("status_code", status.HTTP_200_OK)
+            except ValueError as e:
+                # Error
+                response.data = {"data": "ERROR => %s" % e.args[0]}
+                response.status_code = status.HTTP_404_NOT_FOUND
+                return response
+            except Exception as error:
+                # Error
+                response.data = {"data": "ERROR => %s" % error.args[0]}
+                response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                return response
+            # Then
+            return response
+
+        # We received a problem with user.
+        response.data = {
+            "data": "User was inactive before or something what wrong in the request"
+        }
+        response.__setattr__("status_code", status.HTTP_401_UNAUTHORIZED)
         return response

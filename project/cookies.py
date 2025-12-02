@@ -44,10 +44,3 @@ class Cookies:
             samesite=samesite_,
         )
         return self.response
-
-    # def All(self, is_staff: bool, is_active: bool) -> HttpResponse:
-    #     self.user_session(self.session_key_user)
-    #     self.is_staff(is_staff)
-    #     self.is_active(is_active)
-    #     self.user_index(self.session_key_user)
-    #     return self.response

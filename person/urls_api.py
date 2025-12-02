@@ -12,4 +12,9 @@ urlpatterns = [
         ProfileViewSet.as_view({"patch": "active"}),
         name="person_active",
     ),
+    path(
+        "<str:pk>/inactive/",
+        ProfileViewSet.as_view({"patch": "inactive"}),
+        name="person_active",
+    ),
 ]

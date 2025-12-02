@@ -169,21 +169,6 @@ class ProfileSerializer(ModelSerializer):
 
         return attrs
 
-    # async def aupdate(self, instance, validated_data):
-    #
-    #     # Simply set each attribute on the instance, and then asave it.
-    #     # Note that unlike `.create()` we don't need to treat many-to-many
-    #     # relationships as being a special case. During updates we already
-    #     # have an instance pk for the relationships to be associated with.
-    #     m2m_fields = []
-    #
-    #     # Note that many-to-many fields are set after updating instance.
-    #     # Setting m2m fields triggers signals which could potentially change
-    #     # updated instance and we do not want it to collide with .update()
-    #
-    #
-    #     return instance
-
 
 class BusinessSerializer(ModelSerializer):
     class Meta:

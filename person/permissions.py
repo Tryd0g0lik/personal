@@ -34,14 +34,12 @@ class IsOwner(BasePermission):
 
     def has_permission(self, request: Request, View: ModelObjects = None) -> bool:
         """
-        Line of the single view from db. This is where is get the index from 'View.user.id'
+        Line of the single view from db. This is where is get the index from 'View.id'
         If the db's line was created by the user - it means return the True or not.
         """
         if not is_active(request) or not View:
             return False
-        return (
-            is_all(request) or request.user.is_admin or request.user.id == View.user.id
-        )
+        return is_all(request) or request.user.is_admin or request.user.id == View.id
 
 
 is_owner = IsOwner().has_permission

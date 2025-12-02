@@ -2,6 +2,7 @@ import pytest
 import logging
 import asyncio
 from django.http import (HttpResponse, HttpRequest)
+
 from django.contrib.sessions.middleware import SessionMiddleware
 from logs import configure_logging
 

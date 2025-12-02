@@ -15,7 +15,7 @@ from rest_framework_simplejwt.utils import aware_utcnow
 class CustomAccessToken(AccessToken):
     def __init__(
         self,
-        user,
+        user=None,
         token: Token | None = None,
         verify: bool = True,
     ):
@@ -29,7 +29,7 @@ class CustomAccessToken(AccessToken):
             self.user = user
             self._init_user_claims()
 
-    def _init_user_claims(self) -> None:
+    def _init_user_claims(self, tokentype: str = "access") -> None:
         """
         Access token from user properties
         :param int exp: hours - the time of the token's live
@@ -39,7 +39,7 @@ class CustomAccessToken(AccessToken):
         self["email"] = self.user.email
         self["id"] = self.user.id
 
-        self.__setattr__("token_type", "access")
+        self.__setattr__("token_type", tokentype)
         self.__setattr__("iat", datetime.now())
         self.__setattr__("jti", str(uuid.uuid4()))
 

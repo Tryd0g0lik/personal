@@ -9,6 +9,7 @@ from datetime import timedelta
 from typing import Optional
 from person.jwt.person_jwt_access_token import CustomAccessToken
 
+
 from project.bcoding import DcodeManager
 
 
@@ -55,7 +56,7 @@ class TokenManager:
         try:
             refresh = RefreshToken()
 
-            if str(refresh["user_id"]) != str(self.user.id):
+            if str(refresh["id"]) != str(self.user.id):
                 raise ValueError("Token does not belong to this user")
 
             new_access = CustomAccessToken.for_user(self.user, lifetime=access_lifetime)
@@ -70,21 +71,13 @@ class TokenManager:
         except Exception as e:
             raise ValueError(f"Token refresh failed: {str(e)}")
 
-    def verify_access_token(self, token_str: str) -> bool:
+    def verify_access_token(self, token_str):
         """
         Verification of access token
         """
         try:
-            token = CustomAccessToken(token_str, verify=True)
-
-            # additionally checks
-            if str(token["user_id"]) != str(self.user.id):
-                return False
-
-            if not self.user.is_active:
-                return False
-
-            return True
-
-        except Exception:
+            token = CustomAccessToken(token=token_str, verify=True)
+            return token
+        except Exception as e:
+            print(e.args[0])
             return False
