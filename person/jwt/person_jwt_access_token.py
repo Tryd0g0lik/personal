@@ -1,19 +1,22 @@
 """
 project/person_jwt_access_token.py
 """
-import uuid
-from typing import Optional
 
-from rest_framework_simplejwt.tokens import (AccessToken, T)
+import uuid
+
+from rest_framework_simplejwt.tokens import AccessToken, T
 from rest_framework_simplejwt.tokens import Token
-from datetime import datetime, timedelta, date
-from django.apps import apps
+from datetime import datetime, timedelta
 from rest_framework_simplejwt.utils import aware_utcnow
 
-User = apps.get_model("person", "User")
 
 class CustomAccessToken(AccessToken):
-    def __init__(self, user: Optional[User] | None, token: Token | None = None, verify: bool = True,):
+    def __init__(
+        self,
+        user=None,
+        token: Token | None = None,
+        verify: bool = True,
+    ):
         if token is not None:
             super().__init__(token, verify)
 
@@ -24,23 +27,22 @@ class CustomAccessToken(AccessToken):
             self.user = user
             self._init_user_claims()
 
-
-    def _init_user_claims(self) -> None:
+    def _init_user_claims(self, tokentype: str = "access") -> None:
         """
         Access token from user properties
         :param int exp: hours - the time of the token's live
         """
-        if not self.user: return
-        self["first_name"] = self.user.first_name
-        self['email'] = self.user.email
+        if not self.user:
+            return
+        self["email"] = self.user.email
+        self["id"] = self.user.id
 
-
-        self["token_type"] = "access"
-        self["iat"] = datetime.now()
-        self['jti'] = str(uuid.uuid4())
+        self.__setattr__("token_type", tokentype)
+        self.__setattr__("iat", datetime.now())
+        self.__setattr__("jti", str(uuid.uuid4()))
 
     @classmethod
-    def for_user(cls: type[T], user: User, lifetime: int | None = 86400) -> AccessToken:
+    def for_user(cls: type[T], user, lifetime: int | None = 86400) -> AccessToken:
         """
 
         :param user:
@@ -49,6 +51,8 @@ class CustomAccessToken(AccessToken):
         """
         token = cls(user=user)
         if lifetime:
-            token.set_exp(lifetime=timedelta(seconds=lifetime), from_time=aware_utcnow())
+            token.set_exp(
+                lifetime=timedelta(seconds=lifetime), from_time=aware_utcnow()
+            )
 
         return token
