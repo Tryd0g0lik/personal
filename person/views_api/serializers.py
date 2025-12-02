@@ -169,7 +169,7 @@ class ProfileSerializer(ModelSerializer):
 
 class BusinessSerializer(ModelSerializer):
     class Meta:
-        model: BusinessElementModel
+        model = BusinessElementModel
         fields = "__all__"
         read_only_fields = ("created_at", "code")
 

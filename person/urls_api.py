@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from business.views_business import BusinessViewSet
 from person.views_api.views_person_api import UserViews, ProfileViewSet
 
 router = DefaultRouter()
