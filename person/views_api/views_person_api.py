@@ -29,6 +29,12 @@ configure_logging(logging.INFO)
 
 
 class UserViews(viewsets.ModelViewSet):
+    """
+    TODO: Сделать обновление токена.
+        Логика обновления JWT реализована в 'person/jwt'.
+        Обновление JWT токена разместить в API.
+    """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [authentication.SessionAuthentication]
@@ -83,7 +89,7 @@ class UserViews(viewsets.ModelViewSet):
         },
         tags=["person"],
     )
-    async def create(self, request: Request, *args, **kwargs) -> Response:
+    async def acreate(self, request: Request, *args, **kwargs) -> Response:
         """
         This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
         THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
@@ -172,11 +178,18 @@ class UserViews(viewsets.ModelViewSet):
         response.data = {"data": text_log}
         return response
 
-    async def list(self, request: Request, *args, **kwargs) -> Response:
+    async def alist(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.list.__name__)
         if not is_active(request):
             response = Response()
             text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
+        if not is_all(request) or not request.user.is_admin:
+            response = Response()
+            text_log += "Not OK - you do not have sufficient rights"
             log.info(text_log)
             response.status_code = status.HTTP_401_UNAUTHORIZED
             response.data = {"data", text_log}
@@ -188,7 +201,7 @@ class UserViews(viewsets.ModelViewSet):
             response.data.pop("password")
         return response
 
-    async def update(self, request: Request, *args, **kwargs) -> Response:
+    async def aupdate(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
         response = Response()
         if not is_active(request):
@@ -218,7 +231,7 @@ class UserViews(viewsets.ModelViewSet):
         response.data = {"data", text_log}
         return response
 
-    async def retrieve(self, request: Request, *args, **kwargs) -> Response:
+    async def aretrieve(self, request: Request, *args, **kwargs) -> Response:
         response = await super().aretrieve(request, *args, **kwargs)
         pass
         if isinstance(response.data, list):
