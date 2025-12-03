@@ -14,7 +14,7 @@ from django.core.validators import validate_email
 from person.models import User
 from person.models_person.model_black import BlackListModel
 from person.models_person.model_business import BusinessElementModel
-from person.models_person.model_role import RoleModel
+from person.models_person.model_role import RoleModel, AccessRolesModel
 from logs import configure_logging
 
 configure_logging(logging.INFO)
@@ -179,9 +179,17 @@ class BusinessSerializer(ModelSerializer):
         if not re.search(regex, name):
             raise serializers.ValidationError("Name is not invalid")
 
+
 class RoleSerializer(ModelSerializer):
     class Meta:
         model = RoleModel
+        fields = "__all__"
+        read_only_fields = ("created_at",)
+
+
+class AccessRolesSerializer(ModelSerializer):
+    class Meta:
+        model = AccessRolesModel
         fields = "__all__"
         read_only_fields = ("created_at",)
 

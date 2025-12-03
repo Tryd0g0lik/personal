@@ -40,7 +40,7 @@ class BusinessElementModel(BaseModel):
     )
 
     class Meta:
-        db_table = "business_element"
+        db_table = "person_business_element"
         verbose_name = "business element"
         verbose_name_plural = "business elements"
         ordering = ["-updated_at"]

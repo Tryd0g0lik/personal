@@ -53,16 +53,6 @@ class UserViews(viewsets.ModelViewSet):
                     @param: str role - обязательное значение.  От роли зависят ограничения профиля.\
 
                     """,
-        manual_parameters=[
-            openapi.Parameter(
-                name="X-CSRFToken",
-                title="X-CSRFToken",
-                required=["X-CSRFToken"],
-                in_=openapi.IN_HEADER,
-                type=openapi.TYPE_STRING,
-                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
-            )
-        ],
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             title="BodyData",

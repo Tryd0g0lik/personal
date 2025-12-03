@@ -43,7 +43,7 @@ class RoleModel(BaseModel):
     )
 
     class Meta:
-        db_table = "role"
+        db_table = "person_role"
         # unique_together = (("id", "name"), "description", ("created_at", "updated_at"))
         verbose_name = _("Role")
         ordering = ("name",)
@@ -78,7 +78,7 @@ class AccessRolesModel(BaseModel):
     )
 
     class Meta:
-        db_table = "access_roles"
+        db_table = "person_access_roles"
 
         verbose_name = _("Access roles")
         ordering = ("role", "element")

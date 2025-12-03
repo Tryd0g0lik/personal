@@ -14,11 +14,12 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.request import Request
 
+
 from logs import configure_logging
 from person.models import User
-from person.models_person.model_role import AccessRolesModel
+from person.models_person.model_role import AccessRolesModel, RoleModel
 from person.permissions import is_active, is_managerOrAdmin, is_create, is_owner
-from person.views_api.serializers import BusinessSerializer
+from person.views_api.serializers import BusinessSerializer, AccessRolesSerializer
 
 log = logging.getLogger(__name__)
 configure_logging(logging.INFO)
@@ -111,13 +112,20 @@ class BusinessViewSet(viewsets.ModelViewSet):
                 if is_valid:
                     await serializer.asave()
 
-                    access_element = AccessRolesModel(
-                        role=user.role, user=user.id, element=serializer.data.get("id")
-                    )
+                    access_element = AccessRolesModel()
+                    access_element.user = user
+                    role_id_list = await RoleModel.objects.filter(
+                        id=user.role_id
+                    ).afirst()
+                    access_element.role = role_id_list
+
+                    access_element.element = await self.queryset.filter(
+                        id=serializer.data["id"]
+                    ).afirst()
                     await access_element.asave()
                     response.status_code = status.HTTP_201_CREATED
-                    access_element_json = self.serializer_class(access_element)
-                    response.data = {"data", access_element_json}
+                    access_element_json = AccessRolesSerializer(access_element)
+                    response.data = access_element_json.data
                     return response
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return response
@@ -383,11 +391,15 @@ class BusinessViewSet(viewsets.ModelViewSet):
                     serializer = self.get_serializer(page, many=True)
                     response = paginator.get_paginated_response(serializer.data)
                     log.info(f"{text_log} Successfully retrieved page")
+                    results = []
+
+                    response.data["results"] = await self.get_results(response)
                     return response
 
                 # Если пагинация не используется
                 serializer = self.get_serializer(queryset, many=True)
                 log.info(f"{text_log} Successfully retrieved all data")
+                response.data["results"] = await self.get_results(serializer)
                 return Response({"data": serializer.data}, status=status.HTTP_200_OK)
             response.data = {"data": "Not OK - you do not have sufficient rights"}
             response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
@@ -403,17 +415,19 @@ class BusinessViewSet(viewsets.ModelViewSet):
     async def retrieve(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.retrieve.__name__)
         response = Response()
-        pk = kwargs.get("pk")
+        element_id = kwargs.get("pk")
         try:
-            if pk:
-                u_list = User.objects.filter(id=pk)
-
-                list_bool = await u_list.aexists()
-                if not list_bool:
-                    response.data = {"data": "User not found"}
-                    response.status_code = status.HTTP_404_NOT_FOUND
+            # ===== GET ONE ELEMENT
+            if element_id:
+                # CHECK - user
+                access_role_list = AccessRolesModel.objects.filter(element=element_id)
+                if not await access_role_list.aexists():
+                    response.data = {"data": "Not found"}
+                    response.__setattr__("status_code", status.HTTP_404_NOT_FOUND)
                     return response
-                u = await u_list.afirst()
+                role = await access_role_list.afirst()
+                u = await User.objects.aget(pk=role.user_id)
+                # CHECK - allows access
                 if is_managerOrAdmin(request) or is_owner(request, u):
                     queryset = self.filter_queryset(self.get_queryset())
 
@@ -425,6 +439,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
                     if page is not None:
                         serializer = self.get_serializer(page, many=True)
                         response = paginator.get_paginated_response(serializer.data)
+                        response.__setattr__("status_code", status.HTTP_200_OK)
                         log.info(f"{text_log} Successfully retrieved page")
                         return response
 
@@ -528,7 +543,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
         if not is_active(request):
             text_log += " Your accout needs to be activated"
             log.info(text_log)
-            response.__setattr__("status_code", status.HTTP_401_UNAUTHORIZED)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
             response.data = {"data", text_log}
             return response
         # FREEZING
@@ -544,10 +559,22 @@ class BusinessViewSet(viewsets.ModelViewSet):
         u = u_list.first()
         if is_owner(request, u) or is_managerOrAdmin(request):
             response = await super().aupdate(request, args, kwargs)
-            response.__setattr__("status_code", status.HTTP_200_OK)
+            response.status_code = status.HTTP_200_OK
             return response
         text_log += " you do not have sufficient rights"
         log.info(text_log)
-        response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
+        response.status_code = status.HTTP_403_FORBIDDEN
         response.data = {"data", text_log}
         return response
+
+    @staticmethod
+    async def get_results(response) -> []:
+        resp = []
+        for view in response.data["results"]:
+            seril = AccessRolesSerializer(
+                await AccessRolesModel.objects.aget(element_id=view["id"])
+            )
+            d = seril.data
+            view["access_role"] = d
+            resp.append(view)
+        return resp
