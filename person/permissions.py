@@ -53,14 +53,8 @@ class IsManagerOrAdmin(BasePermission):
     """Allows access for the managers and admin"""
 
     def has_permission(self, request, view=None):
-        return not request.user.groups.filter(
-            name__in=[
-                "User_group",
-                "Visitor_group",
-            ]
-        ).exists() and (
-            is_all(request) or (request.user.is_admin or request.user.is_staff)
-        )
+        return is_all(request) or (request.user.is_admin or request.user.is_staff)
+
 
 
 is_managerOrAdmin = IsManagerOrAdmin().has_permission

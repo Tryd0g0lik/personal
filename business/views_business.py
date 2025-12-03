@@ -1,7 +1,7 @@
 """
 business/views_business.py
 """
-
+import asyncio
 import logging
 
 from django.apps import apps
@@ -89,7 +89,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
         },
         tags=["business"],
     )
-    async def acreate(self, request: Request, *args, **kwargs) -> Response:
+    async def create(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.acreate.__name__)
         response = Response()
         if not is_active(request):
@@ -358,11 +358,13 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
         try:
+            # t =
             if is_managerOrAdmin(request):
                 queryset = self.filter_queryset(self.get_queryset())
 
                 paginator = self.pagination_class()
-                page = paginator.paginate_queryset(queryset, request)
+                page = await asyncio.to_thread(lambda : paginator.paginate_queryset(queryset, request))
+
 
                 if page is not None:
                     serializer = self.get_serializer(page, many=True)

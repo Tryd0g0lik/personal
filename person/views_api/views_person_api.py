@@ -8,6 +8,7 @@ import logging
 from adrf import viewsets
 
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.permissions import IsAuthenticated
 
 from logs import configure_logging
 from person.models import User
@@ -37,7 +38,8 @@ class UserViews(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    authentication_classes = [authentication.SessionAuthentication]
+    # authentication_classes = [authentication.SessionAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="""
@@ -89,7 +91,7 @@ class UserViews(viewsets.ModelViewSet):
         },
         tags=["person"],
     )
-    async def acreate(self, request: Request, *args, **kwargs) -> Response:
+    async def create(self, request: Request, *args, **kwargs) -> Response:
         """
         This method has 4 required of variables. It's : "mail', 'password', 'password_confirm', "role".
         THe 'role' has a following values: "staff", "admin", "user", "visitor", "superuser".
@@ -178,7 +180,7 @@ class UserViews(viewsets.ModelViewSet):
         response.data = {"data": text_log}
         return response
 
-    async def alist(self, request: Request, *args, **kwargs) -> Response:
+    async def list(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.list.__name__)
         if not is_active(request):
             response = Response()
@@ -201,7 +203,7 @@ class UserViews(viewsets.ModelViewSet):
             response.data.pop("password")
         return response
 
-    async def aupdate(self, request: Request, *args, **kwargs) -> Response:
+    async def update(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
         response = Response()
         if not is_active(request):
@@ -214,7 +216,7 @@ class UserViews(viewsets.ModelViewSet):
         k = list(kwargs.keys())[0]
         v = list(kwargs.values())[0]
         u_list = User.objects.filter(k=v)
-        if not u_list.exists():
+        if not await u_list.aexists():
             text_log += " Data was not found"
             log.info(text_log)
             response.status_code = status.HTTP_404_NOT_FOUND
@@ -231,7 +233,7 @@ class UserViews(viewsets.ModelViewSet):
         response.data = {"data", text_log}
         return response
 
-    async def aretrieve(self, request: Request, *args, **kwargs) -> Response:
+    async def retrieve(self, request: Request, *args, **kwargs) -> Response:
         response = await super().aretrieve(request, *args, **kwargs)
         pass
         if isinstance(response.data, list):
@@ -326,7 +328,7 @@ class UserViews(viewsets.ModelViewSet):
         # FREEZING
         black_list = BlackListModel.objects.filter(email=u.email)
         if (
-            not black_list.exists()
+            not await black_list.aexists()
             and kwargs["pk"]
             and is_owner(request, u)
             or request.user.is_admin
@@ -337,7 +339,7 @@ class UserViews(viewsets.ModelViewSet):
                 b = BlackListModel(email=u.email)
                 await u.asave(update_fields=["is_active"])
                 await b.asave()
-                response.data = {"data", "OK"}
+                response.data = {"data": "OK"}
                 response.status_code = status.HTTP_200_OK
             except Exception as e:
                 text_e = "%s ERROR => %s" % (text_log, e.args[0])
@@ -345,7 +347,7 @@ class UserViews(viewsets.ModelViewSet):
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                 response.data = {"errors", text_e}
             return response
-        elif black_list.exists() and (request.user.is_admin or is_all(request)):
+        elif await black_list.aexists() and (request.user.is_admin or is_all(request)):
             # DELETE
             try:
                 await User.objects.filter(id=u.email).adelete()
@@ -385,14 +387,7 @@ class ProfileViewSet(viewsets.ViewSet):
             },
         ),
         manual_parameters=[
-            openapi.Parameter(
-                name="X-CSRFToken",
-                title="CSRF Token",
-                required=["X-CSRFToken"],
-                in_=openapi.IN_HEADER,
-                type=openapi.TYPE_STRING,
-                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
-            ),
+
         ],
         responses={
             201: openapi.Response(
@@ -534,17 +529,22 @@ class ProfileViewSet(viewsets.ViewSet):
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
         data = request.data
         email = data.get("email")
-        black_list = BlackListModel.objects.filter(**email)
+        black_list = BlackListModel.objects.filter(email=email)
         response = Response()
-
-        if not black_list.exists() and not is_active(request):
+        if await black_list.aexists():
+            text_log += " User was removed before this. Pleas, contact with admin."
+            log.info(f"{text_log} Status code: {status.HTTP_401_UNAUTHORIZED}")
+            response.data = {"data": text_log}
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            return response
+        if not is_active(request):
             try:
                 # ==== CHECK EMAIL & PASSWORD
                 serializer = ProfileSerializer(data=data)
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
 
-                    u = await User.objects.aget(**email)
+                    u = await User.objects.aget(email=email)
                     u.is_active = True
                     await u.asave(
                         update_fields=[
@@ -664,9 +664,15 @@ class ProfileViewSet(viewsets.ViewSet):
             response.data = {"data", text_log}
             return response
         u_list = User.objects.filter(id=pk)
+
+        list_bool = await u_list.aexists()
+        if not list_bool:
+            response.data = {"data": "User not found"}
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return response
         u = await u_list.afirst()
         if (
-            (u_list.exists() and pk and is_owner(request, u)) or is_all(request)
+                (pk and is_owner(request, u)) or is_all(request)
         ) or request.user.is_admin:
             try:
                 # Change db
@@ -682,12 +688,12 @@ class ProfileViewSet(viewsets.ViewSet):
                 c.cookie_create(
                     cookie_key="access_token",
                     value="",
-                    max_age_="0",
+                    max_age_=0,
                 )
                 c.cookie_create(
                     cookie_key="refresh_token",
                     value="",
-                    max_age_="0",
+                    max_age_=0,
                 )
                 # Create - a response
                 response.__setattr__("data", "OK. User was inactive - successfully")
