@@ -360,7 +360,12 @@ CORS_ALLOWED_ORIGINS = [
 # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#csrf-integration
 # https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
 # This is list from private of URL
-CSRF_TRUSTED_ORIGINS = [*CORS_ALLOWED_ORIGINS]
+CSRF_TRUSTED_ORIGINS = [
+    "http://0.0.0.0:8000",
+    f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
+    f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
+    "http://127.0.0.1:8000",
+]
 # Allow the cookie in HTTP request.
 CORS_ALLOW_CREDENTIALS = True
 # Allow the methods to the methods in HTTP
@@ -401,18 +406,21 @@ LOGOUT_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/4.2/topics/auth/customizing/
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
-"""REST_FRAMEWORK SETTINGS AND JWT-tokens"""
+# """"REST_FRAMEWORK SETTINGS AND JWT-tokens"""
 # https://pypi.org/project/djangorestframework-simplejwt/4.3.0/
 # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/stateless_user_authentication.html
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",  # This for works with sessions
-        "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication",
         "rest_framework.authentication.TokenAuthentication",  # Options for API
+        "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication",
+        "rest_framework.authentication.SessionAuthentication",  # This for works with sessions
+
+
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     'PAGE_SIZE': 50,
+
 
 }
 
