@@ -60,16 +60,21 @@ class AccessRolesModel(BaseModel):
     role = models.ForeignKey(
         "RoleModel",
         on_delete=models.CASCADE,
-        related_name="access_rules",
+        related_name="access_roles",
         db_column="role_id",
     )
     element = models.ForeignKey(
         BusinessElementModel,
         on_delete=models.CASCADE,
-        related_name="access_rules",
+        related_name="access_roles",
         db_column="element_id",
         null=True,
         blank=True,
+    )
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="access_roles",
     )
 
     class Meta:

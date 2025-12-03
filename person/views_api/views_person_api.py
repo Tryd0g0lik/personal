@@ -119,7 +119,7 @@ class UserViews(viewsets.ModelViewSet):
         data = request.data
         role = data.get("role")
         response = Response()
-        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.status_code = status.HTTP_403_FORBIDDEN
         if user.is_anonymous or is_all(request) or user.is_admin:
             try:
                 text_log += " User created failed."
@@ -229,7 +229,7 @@ class UserViews(viewsets.ModelViewSet):
             return response
         text_log += " you do not have sufficient rights"
         log.info(text_log)
-        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.status_code = status.HTTP_403_FORBIDDEN
         response.data = {"data", text_log}
         return response
 
@@ -361,7 +361,7 @@ class UserViews(viewsets.ModelViewSet):
                 response.data = {"errors", text_e}
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                 return response
-        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.status_code = status.HTTP_403_FORBIDDEN
         response.data = {"data", "Not OK - you do not have sufficient rights"}
         return response
 
@@ -386,9 +386,7 @@ class ProfileViewSet(viewsets.ViewSet):
                 ),
             },
         ),
-        manual_parameters=[
-
-        ],
+        manual_parameters=[],
         responses={
             201: openapi.Response(
                 description="Данные на выходе",
@@ -533,9 +531,9 @@ class ProfileViewSet(viewsets.ViewSet):
         response = Response()
         if await black_list.aexists():
             text_log += " User was removed before this. Pleas, contact with admin."
-            log.info(f"{text_log} Status code: {status.HTTP_401_UNAUTHORIZED}")
+            log.info(f"{text_log} Status code: {status.HTTP_403_FORBIDDEN}")
             response.data = {"data": text_log}
-            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.status_code = status.HTTP_403_FORBIDDEN
             return response
         if not is_active(request):
             try:
@@ -595,7 +593,7 @@ class ProfileViewSet(viewsets.ViewSet):
         text_log += " User was activated before this."
         log.info(f"{text_log} Status code: {status.HTTP_401_UNAUTHORIZED}")
         response.data = {"data": text_log}
-        response.status_code = status.HTTP_401_UNAUTHORIZED
+        response.status_code = status.HTTP_403_FORBIDDEN
         return response
 
     @swagger_auto_schema(
@@ -671,9 +669,7 @@ class ProfileViewSet(viewsets.ViewSet):
             response.status_code = status.HTTP_404_NOT_FOUND
             return response
         u = await u_list.afirst()
-        if (
-                (pk and is_owner(request, u)) or is_all(request)
-        ) or request.user.is_admin:
+        if ((pk and is_owner(request, u)) or is_all(request)) or request.user.is_admin:
             try:
                 # Change db
                 u = await User.objects.aget(pk=pk)

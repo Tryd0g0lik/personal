@@ -1,8 +1,10 @@
 """
 business/views_business.py
 """
+
 import asyncio
 import logging
+from os import access
 
 from django.apps import apps
 from adrf import viewsets
@@ -14,7 +16,8 @@ from rest_framework.request import Request
 
 from logs import configure_logging
 from person.models import User
-from person.permissions import is_active, is_managerOrAdmin, is_create
+from person.models_person.model_role import AccessRolesModel
+from person.permissions import is_active, is_managerOrAdmin, is_create, is_owner
 from person.views_api.serializers import BusinessSerializer
 
 log = logging.getLogger(__name__)
@@ -93,6 +96,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
     async def create(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.acreate.__name__)
         response = Response()
+        user = request.user
         if not is_active(request):
             text_log += " Your accout needs to be activated"
             log.info(text_log)
@@ -101,26 +105,33 @@ class BusinessViewSet(viewsets.ModelViewSet):
             return response
         try:
             if is_managerOrAdmin(request) or is_create(request):
-                data = request.data
-                serializer = BusinessSerializer(data=request.data)
+                serializer = self.serializer_class(data=request.data)
+
                 is_valid = await asyncio.to_thread(serializer.is_valid)
                 if is_valid:
                     await serializer.asave()
+
+                    access_element = AccessRolesModel(
+                        role=user.role, user=user.id, element=serializer.data.get("id")
+                    )
+                    await access_element.asave()
                     response.status_code = status.HTTP_201_CREATED
+                    access_element_json = self.serializer_class(access_element)
+                    response.data = {"data", access_element_json}
                     return response
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return response
             text_log += " Your accout needs to be activated"
             log.info(text_log)
-            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.status_code = status.HTTP_403_FORBIDDEN
             response.data = {"data", "Not OK - you do not have sufficient rights"}
             return response
+
         except Exception as e:
             text_log += " ERROR => %s" % e.args[0]
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             response.data = {"data", text_log}
             return response
-
 
     @swagger_auto_schema(
         operation_description="""
@@ -351,6 +362,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
         """
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.alist.__name__)
         response = Response()
+
         if not is_active(request):
             text_log += " Your accout needs to be activated"
             log.info(text_log)
@@ -358,13 +370,14 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
         try:
-            # t =
+
             if is_managerOrAdmin(request):
                 queryset = self.filter_queryset(self.get_queryset())
 
                 paginator = self.pagination_class()
-                page = await asyncio.to_thread(lambda : paginator.paginate_queryset(queryset, request))
-
+                page = await asyncio.to_thread(
+                    lambda: paginator.paginate_queryset(queryset, request)
+                )
 
                 if page is not None:
                     serializer = self.get_serializer(page, many=True)
@@ -376,6 +389,54 @@ class BusinessViewSet(viewsets.ModelViewSet):
                 serializer = self.get_serializer(queryset, many=True)
                 log.info(f"{text_log} Successfully retrieved all data")
                 return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+            response.data = {"data": "Not OK - you do not have sufficient rights"}
+            response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
+            return response
+        except Exception as e:
+            text_log += f" ERROR => %s" % e.args[0]
+            log.error(text_log)
+            return Response(
+                {"data": "Internal server error", "error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    async def retrieve(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.retrieve.__name__)
+        response = Response()
+        pk = kwargs.get("pk")
+        try:
+            if pk:
+                u_list = User.objects.filter(id=pk)
+
+                list_bool = await u_list.aexists()
+                if not list_bool:
+                    response.data = {"data": "User not found"}
+                    response.status_code = status.HTTP_404_NOT_FOUND
+                    return response
+                u = await u_list.afirst()
+                if is_managerOrAdmin(request) or is_owner(request, u):
+                    queryset = self.filter_queryset(self.get_queryset())
+
+                    paginator = self.pagination_class()
+                    page = await asyncio.to_thread(
+                        lambda: paginator.paginate_queryset(queryset, request)
+                    )
+
+                    if page is not None:
+                        serializer = self.get_serializer(page, many=True)
+                        response = paginator.get_paginated_response(serializer.data)
+                        log.info(f"{text_log} Successfully retrieved page")
+                        return response
+
+                    # Если пагинация не используется
+                    serializer = self.get_serializer(queryset, many=True)
+                    log.info(f"{text_log} Successfully retrieved all data")
+                    return Response(
+                        {"data": serializer.data}, status=status.HTTP_200_OK
+                    )
+            response.data = {"data": "Not OK - you do not have sufficient rights"}
+            response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
+            return response
         except Exception as e:
             text_log += f" ERROR => %s" % e.args[0]
             log.error(text_log)
@@ -422,9 +483,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
                 description="JWT Refresh Token",
                 example="nH2qGiehvEXjNiYqp3bOVtAYv....",
             ),
-
         ],
-
         responses={
             204: "Removed successfully",
             401: "Not Ok",
@@ -454,7 +513,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
                 return response
             text_log += " Your accout needs to be activated"
             log.info(text_log)
-            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.status_code = status.HTTP_403_FORBIDDEN
             response.data = {"data": "Not OK - you do not have sufficient rights"}
             return response
         except Exception as e:
@@ -463,4 +522,32 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
 
-
+    async def update(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
+        response = Response()
+        if not is_active(request):
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.__setattr__("status_code", status.HTTP_401_UNAUTHORIZED)
+            response.data = {"data", text_log}
+            return response
+        # FREEZING
+        k = list(kwargs.keys())[0]
+        v = list(kwargs.values())[0]
+        u_list = User.objects.filter(k=v)
+        if not await u_list.aexists():
+            text_log += " Data was not found"
+            log.info(text_log)
+            response.status_code = status.HTTP_404_NOT_FOUND
+            response.data = {"data", text_log}
+            return response
+        u = u_list.first()
+        if is_owner(request, u) or is_managerOrAdmin(request):
+            response = await super().aupdate(request, args, kwargs)
+            response.__setattr__("status_code", status.HTTP_200_OK)
+            return response
+        text_log += " you do not have sufficient rights"
+        log.info(text_log)
+        response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
+        response.data = {"data", text_log}
+        return response
