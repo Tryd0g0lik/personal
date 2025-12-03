@@ -23,7 +23,7 @@ class BusinessElementModel(BaseModel):
             MaxLengthValidator(120),
             MinLengthValidator(1),
             RegexValidator(
-                regex=r"^([A-Z][A-Za-z0-9_]{1,119})$",
+                regex=r"^([A-Za-z0-9\"'%)(}{_ ]{1,120})$",
             ),
         ],
         help_text="The business element name",

@@ -173,6 +173,11 @@ class BusinessSerializer(ModelSerializer):
         fields = "__all__"
         read_only_fields = ("created_at", "code")
 
+    def vaidate(self, validated_data):
+        name = validated_data.pop("name")
+        regex = r"[\w-_ %)(]{1,120}$"
+        if not re.search(regex, name):
+            raise serializers.ValidationError("Name is not invalid")
 
 class RoleSerializer(ModelSerializer):
     class Meta:

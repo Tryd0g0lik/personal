@@ -1,7 +1,7 @@
 """
 business/views_business.py
 """
-
+import asyncio
 import logging
 
 from django.apps import apps
@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 
 from logs import configure_logging
+from person.models import User
 from person.permissions import is_active, is_managerOrAdmin, is_create
 from person.views_api.serializers import BusinessSerializer
 
@@ -89,7 +90,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
         },
         tags=["business"],
     )
-    async def acreate(self, request: Request, *args, **kwargs) -> Response:
+    async def create(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.acreate.__name__)
         response = Response()
         if not is_active(request):
@@ -100,8 +101,14 @@ class BusinessViewSet(viewsets.ModelViewSet):
             return response
         try:
             if is_managerOrAdmin(request) or is_create(request):
-                response = await super().acreate(request, *args, **kwargs)
-                response.status_code = status.HTTP_201_CREATED
+                data = request.data
+                serializer = BusinessSerializer(data=request.data)
+                is_valid = await asyncio.to_thread(serializer.is_valid)
+                if is_valid:
+                    await serializer.asave()
+                    response.status_code = status.HTTP_201_CREATED
+                    return response
+                response.status_code = status.HTTP_400_BAD_REQUEST
                 return response
             text_log += " Your accout needs to be activated"
             log.info(text_log)
@@ -114,13 +121,6 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
 
-    from drf_yasg import openapi
-    from drf_yasg.utils import swagger_auto_schema
-
-    # views.py
-    class DashboardViewSet(viewsets.ModelViewSet):
-        queryset = BusinessElementModel.objects.all()
-        serializer_class = BusinessSerializer
 
     @swagger_auto_schema(
         operation_description="""
@@ -358,11 +358,13 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
         try:
+            # t =
             if is_managerOrAdmin(request):
                 queryset = self.filter_queryset(self.get_queryset())
 
                 paginator = self.pagination_class()
-                page = paginator.paginate_queryset(queryset, request)
+                page = await asyncio.to_thread(lambda : paginator.paginate_queryset(queryset, request))
+
 
                 if page is not None:
                     serializer = self.get_serializer(page, many=True)
@@ -381,3 +383,84 @@ class BusinessViewSet(viewsets.ModelViewSet):
                 {"data": "Internal server error", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @swagger_auto_schema(
+        # operation_description="""
+        #
+        #                 """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="id",
+                title="Pathname",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                example="c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+            ),
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="access_token",
+                title="Access Token",
+                type=openapi.TYPE_STRING,
+                required=["access_token"],
+                in_="cookie",
+                description="JWT Access Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="refresh_token",
+                title="Refresh Token",
+                type=openapi.TYPE_STRING,
+                required=["refresh_token"],
+                in_="cookie",
+                description="JWT Refresh Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+
+        ],
+
+        responses={
+            204: "Removed successfully",
+            401: "Not Ok",
+            500: "Something what wrong. Read the response variable 'data'",
+        },
+        tags=["business"],
+    )
+    async def destroy(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.destroy.__name__)
+        response = Response()
+        if not is_active(request):
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data", text_log}
+            return response
+        try:
+            if is_managerOrAdmin(request):
+                business_list = BusinessElementModel.objects.filter(id=kwargs["pk"])
+                if not await business_list.aexists():
+                    response.status_code = status.HTTP_404_NOT_FOUND
+                    response.data = {"data": "Not Ok"}
+                    return response
+                await business_list.first().adelete()
+                response.status_code = status.HTTP_204_NO_CONTENT
+                response.data = {"data": "Removed successfully"}
+                return response
+            text_log += " Your accout needs to be activated"
+            log.info(text_log)
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            response.data = {"data": "Not OK - you do not have sufficient rights"}
+            return response
+        except Exception as e:
+            text_log += " ERROR => %s" % e.args[0]
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            response.data = {"data", text_log}
+            return response
+
+

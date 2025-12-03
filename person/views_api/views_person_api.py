@@ -352,7 +352,7 @@ class UserViews(viewsets.ModelViewSet):
             try:
                 await User.objects.filter(id=u.email).adelete()
                 await BlackListModel.objects.get(email=u.email).adelete()
-                response.data = {"data", "Removed successfully"}
+                response.data = {"data": "Removed successfully"}
                 response.status_code = status.HTTP_200_OK
                 return response
             except Exception as e:
