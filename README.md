@@ -272,8 +272,22 @@ SMTP_PASS= <password_from_SMTP_USER>
 
 ----
 
-## 
+## Admin
+**Note**: make a click
+
+|**Admin form - login**||**Admin page**||**Role of user**|
+|:----|:----|:----|:----|:----|
+|[![form login](img/admin_form.png)](img/admin_form.png)||[![ADmin page](img/admin.png)](img/admin.png)||[![User role](img/admin_role.png)](img/admin_role.png)|
+||||||
+|**Account**||**Business**||**Postman of letter**|
+|[![Account page](img/account.png)](img/account.png)||[![business](img/business_admi_element.png)](img/business_admi_element.png)||**[![Postman](img/email.png)](img/email.png)**|
+||||||
+|**Permission of user**|||||
+|[![Postman](img/user_Admin.png)](img/user_Admin.png)|||||
+
+
 
 **Note**: И если желаете:
 - настрою "`njinx`", "`docker`"-инструкций и "`github workflow`" файла, чтоб подкнять на сервере.
 - покрою тестами
+
