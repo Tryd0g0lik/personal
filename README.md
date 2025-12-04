@@ -165,8 +165,6 @@ root
 ├──business/
 │   └──*.py
 ├──person/
-│   ├──/admins
-│   │   └──*.py
 │   ├──views_api/
 │   │   └──*.py
 │   ├──jwt/
@@ -278,4 +276,4 @@ SMTP_PASS= <password_from_SMTP_USER>
 
 **Note**: И если желаете:
 - настрою "`njinx`", "`docker`"-инструкций и "`github workflow`" файла, чтоб подкнять на сервере.
-- покрою тестами. 
+- покрою тестами
