@@ -266,7 +266,7 @@ SMTP_PASS= <password_from_SMTP_USER>
 |                      |                               |                           |
 |:---------------------|:------------------------------|:--------------------------|
 | async "`Django`"           | "`wagtail`"                   | "`PostgreSQL` or "`ASQLite`" |
-| "`asincio`"              | "`adrf`"                      | "`psycopg2`"|
+|            | "`adrf`"                      | "`psycopg2`"|
 
 
 
