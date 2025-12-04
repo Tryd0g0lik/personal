@@ -1,18 +1,4 @@
- 
-
-
-
 ## Таблица прав доступа для ролей:
-Файл редактируется
-
-В данный момент, необходимо:
-- день для подключения бизнес части к API;
-- пол дня создать "красивый" `README.md`;
-- ещё день или два для - покрыть тестами;
-- и день для страховки. 
-Всего 5 дней дополнительно . Если ответ - нет, то `README.md` подготовлю 03.11.2025\
-**Note**: И если желаете, дайте время для подключения "`njinx`" создания "`docker`"-инструкций и "`github workflow`" файла, чтоб подкнять на сервере.  
-
 
 Сделано для пользователя:
 - разграничение прав на роли - "`staff`", "`admin`", "`user`", "`visitor`", "`superuser`" (разграничение использовется в работе с аккаунтом пользователя);
@@ -45,6 +31,8 @@
 - "`BusinessElementModel`";
 - "`RoleModel`" (таблица с правми ниже); 
 
+---
+
 ## Таблица прав доступа для ролей:
 
 | Роль | Чтение | Создание | Обновление | Удаление | Доступ к админке | Примечания |Кол-во в проекта|
@@ -55,7 +43,7 @@
 | **admin** | ✅ | ✅ | ✅ | ✅ | ✅ | Полные права кроме суперпользователя |до 4 (изменить в .evn)|
 | **superuser** | ✅ | ✅ | ✅ | ✅ | ✅ | Полные права на всю систему |до 1|
 
-## Business
+### Business
 
 Таблица [прав доступа](person/permissions.py) для BusinessViewSet:
 
@@ -102,15 +90,190 @@
 
 *Загрузка списка business-записей проходит в 50 страниц (с учётом пагинации).*
 
-## Swagger
+--- 
+## Commands
+
+```
+py manage.py createsuperuser # - Создать пользователя
+py manage.py makemigrations # - Создать миграции для новых можелей db
+py manage.py migrate        # - Применить миграции к db
+py manage.py showmigrations # - Вывести список миграций
+py manage.py migrate <app_name> zero # - Откатиться до определенной миграции
+py manage.py migrate <app_name> <migration name> # - Отменить все миграции
+py manage.py collectstatic
+py manage.py runserver
+daphne project.asgi:application # - mode: develop & poduction
+git clone <url_repo.git > # - Клонировать репозиторий 
+git log --all --oneline --graph --decorate --date=format:'%Y-%m-%d %H:%M:%S' --pretty=format:'%C(yellow)%h%C(auto)%d %C(white)%cd%Creset %s' # - история развития проекта
+
+```
+
+### Note:
+"`py manage.py collectstatic --clear --noinput`" Запускать после каждого измения статик файлов.
+*"`--clear`"* - удаляет старые файлы. *"`--noinput`"* - если не хотите время тратить на комментарии после запуска команды. \
+- "`makemigrations`" создать файлы миграции в db;
+- "`migrate`" - изменить структуру [базы данных](img/wink_db.png);
+- "`runserver`" - запускаем локальный сервер "`daphne`" для разработки.   
+
+----
+
+---
+## URL 
+### Локальный
+* "`admin/`"; Старая версия
+* "`cms/`"; Новая версия
+* "`swagger/`" API загруска читаемой инструкции;
+* "`redoc/`" API - возможно скачать для Postman;
+* "`swagger<format>/`".
+* 
+### Swagger
 ||||
 |:-----|:-----|:-----|
 |![swager](img/swagger.png)||![swager](img/swagger_.png)|
 
+### csrf
+ - "`GET {{url}}/csrftoken/`" - получить CSRF-token;
+
+### business
+- "`POST`" "`{{url}}/business/order/`" - создать бизнес запись
+- "`GET`"`{{url}}/business/order/`" - получить список бизнес записей
+- "`GET`" "`{{url}}/business/order/{id}/`" получить получить одну запись
+- "`PUT`" "`{{url}}/business/order/{id}/`" обновить всю сроку записи
+- "`PATCH`" "`{{url}}/business/order/{id}/`" обновить запись частично
+- "`DELETE`" "`{{url}}/business/order/{id}/`" удалить запись
+
+### user
+- "`GET`" "`{{url}}/person/users/`" получить список пользователй
+- "`POST`" "`{{url}}/person/users/`" создать пользователя
+- "`GET`" "`{{url}}/person/users/{id}/`" получить данные одного пользователя
+- "`PUT`" "`{{url}}/person/users/{id}/`"  обновить всю запись пользователя
+- "`PATCH`" "`{{url}}/person/users/{id}/`" обновить частично запись пользователя
+- "`DELETE`" "`{{url}}/person/users/{id}/`" удалить запись пользователя
+- "`PATCH`" "`{{url}}/person/0/active/`" авторизация/login
+- "`PATCH`" "`/person/{id}/inactive/`" logout
+
+## Дерево проекта
+
+```text
+root
+├──.git/
+├──.github/
+│       └──workflows/*
+│           └──*.yml
+├──collectstatic/
+├──media/
+├──business/
+│   └──*.py
+├──person/
+│   ├──/admins
+│   │   └──*.py
+│   ├──views_api/
+│   │   └──*.py
+│   ├──jwt/
+│   │   └──*.py 
+│   ├──migrations/
+│   │   └──*.py 
+│   ├──models_person/
+│   │   └──*.py
+│   └──*.py
+├──img/
+│   └──*.png
+├──project/
+│   └──*.py
+├──static/
+│   ├──scripts/
+│   |   └──*.js
+│   └──styles/
+│       └──*.css
+├──templates/
+|   └──*.html
+├──.editorconfig
+├──.env
+├──.flake8
+├──.gitignore
+├──swagger.json
+├──.pre-commit-config.yaml
+├──.pylintrc
+├──logs.py
+├──manage.py
+├──pyproject.toml
+├──pytest.ini
+├──swagger.json
+├──README.md
+├──requirements.txt
+```
+## .ENV
+
+```text
+#PYTHONPATH=E:\OpenServer\domains\hakaton\wink-hakaton\backend
+SECRET_KEY_DJ= < sekret_key_of_your_django >
+DJANGO_SETTINGS_MODULE=project.settings
+
+IS_DEBUG=1 # 1 this is true or 0 it is false  
+IS_ADMIN=4 < max_quantity_from_admin_user >
+IS_SUPERUSER=1 < max_quantity_from_superuser_user >
+
+# app
+APP_PROTOCOL=http
+APP_HOST=127.0.0.1
+APP_HOST_REMOTE= <remote_host_ip >
+APP_PORT=< project_port >
+APP_TIME_ZONE=Asia/Krasnoyarsk
+
+# Redis
+REDIS_HOST=redis
+DB_TO_RADIS_PORT=6380
+DB_TO_RADIS_HOST=< project_redis_port>
+DB_TO_RADIS_CACHE_USERS=1
+
+# db
+POSTGRES_DB= < db_name > 
+POSTGRES_USER= < db_user >
+POSTGRES_HOST= < host_IP >
+POSTGRES_PORT=5432
+POSTGRES_PASSWORD= < db_password >
+DB_ENGINE=django.db.backends.postgresql
+
+TEST_DB_NAME= < test_db_name >
+TEST_DB_USER= < test_db_user >
+TEST_DB_PASSWORD= <test_db_password >
+
+
+DATABASE_ENGINE_LOCAL=django.db.backends.sqlite3
+DATABASE_LOCAL=truckdriver_db.sqlite3
+
+JWT_ACCESS_TOKEN_LIFETIME_MINUTES=5
+JWT_REFFRESH_TOKEN_LIFETIME_DAYS=10
+
+
+# Development mode
+DJANGO_ENV=development
+## or test
+#DJANGO_ENV=testing
+
+## or prodo
+#DJANGO_ENV=production
+
+
+# Email Service
+SMTP_HOST=smtp.yandex.ru
+SMTP_USER= <email@in_provader.domen>
+SMTP_PORT=465
+SMTP_PASS= <password_from_SMTP_USER>
+
+
+```
+----
+
+|                      |                               |                           |
+|:---------------------|:------------------------------|:--------------------------|
+| async "`Django`"           | "`wagtail`"                   | "`PostgreSQL` or "`ASQLite`" |
+| "`asincio`"              | "`adrf`"                      | "`psycopg2`"|
 
 
 
+----
 
-Да ещё\
-##  Админ панель настраивать? 
-![admin](img/admin.png)
+## 
+
+**Note**: И если желаете, настрою "`njinx`"б "`docker`"-инструкций и "`github workflow`" файла, чтоб подкнять на сервере.
