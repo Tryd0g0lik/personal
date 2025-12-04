@@ -38,6 +38,7 @@ class IsOwner(BasePermission):
 
     def has_permission(self, request: Request, View: ModelObjects = None) -> bool:
         """
+        View is user fron the db's line for change
         Line of the single view from db. This is where is get the index from 'View.id'
         If the db's line was created by the user - it means return the True or not.
         """

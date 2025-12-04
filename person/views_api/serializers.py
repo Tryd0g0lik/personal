@@ -175,7 +175,7 @@ class BusinessSerializer(ModelSerializer):
 
     def vaidate(self, validated_data):
         name = validated_data.pop("name")
-        regex = r"[\w-_ %)(]{1,120}$"
+        regex = r"[0-9\w-_ %)(]{1,120}$"
         if not re.search(regex, name):
             raise serializers.ValidationError("Name is not invalid")
 

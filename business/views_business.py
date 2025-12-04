@@ -4,7 +4,7 @@ business/views_business.py
 
 import asyncio
 import logging
-from os import access
+
 
 from django.apps import apps
 from adrf import viewsets
@@ -88,9 +88,119 @@ class BusinessViewSet(viewsets.ModelViewSet):
             },
         ),
         responses={
-            201: "OK",
-            401: "Not Ok",
-            500: "Something what wrong. Read the response variable 'data'",
+            201: openapi.Response(
+                description="""
+                
+                **Пеример ответа**
+                Ответ состоит из:
+                - "`AccessRolesModel`";
+                - значение переменной "`element`" от "`BusinessElementModel`".
+                ```
+                    {
+                        "id": "0078af7c-ad65-49a0-914b-8e0a1fd273ef",
+                        "created_at": "2025-12-04T08:03:22.033570+07:00",
+                        "updated_at": "2025-12-04T08:03:22.049862+07:00",
+                        "role": "87e31ac7-3e0b-4ab3-8955-730d594032c9",
+                        "element": {
+                            "id": "bf36c6c1-0725-4692-93e4-c32d63cc4ca8",
+                            "created_at": "2025-12-04T08:03:21.956335+07:00",
+                            "updated_at": "2025-12-04T08:03:21.957279+07:00",
+                            "name": "File name 2",
+                            "descriptions": null,
+                            "code": "f3ecbd19-0af5-4fcd-888e-f6445820b6fa"
+                        },
+                        "user": "72e1a6fd-1c3e-4676-b88d-7b6591ddf8c1"
+                    }
+                ```
+                """,
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="0078af7c-ad65-49a0-914b-8e0a1fd273ef",
+                        ),
+                        "created_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="2025-12-04T08:03:22.033570+07:00",
+                        ),
+                        "updated_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="2025-12-04T08:03:22.033570+07:00",
+                        ),
+                        "role": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="This is an index of the role user's permissions for the business.",
+                            example="87e31ac7-3e0b-4ab3-8955-730d594032c9",
+                        ),
+                        "element": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "id": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="This is an index of the element user's permissions for the business.",
+                                    example="bf36c6c1-0725-4692-93e4-c32d63cc4ca8",
+                                ),
+                                "created_at": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="2025-12-04T08:03:22.033570+07:00",
+                                ),
+                                "updated_at": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="2025-12-04T08:03:22.033570+07:00",
+                                ),
+                                "name": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="File name 2",
+                                ),
+                                "descriptions": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="This is an index of the description of the element user's permissions for the business.",
+                                    nullable=True,
+                                ),
+                                "code": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="f3ecbd19-0af5-4fcd-888e-f6445820b6fa"
+                                )
+                            },
+
+                        ),
+                        "user": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="72e1a6fd-1c3e-4676-b88d-7b6591ddf8c1"
+                        ),
+                    }
+                ),
+            ),
+            401: openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "data": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="Сообщение об ошибке",
+                            example=" Your accout needs to be activated",
+                        )
+                    },
+                ),
+
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "data": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="Not OK - you do not have sufficient rights"
+                    )
+                }
+            ),
+            500: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "error": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="ERROR => ...."
+                    )
+                }
+            ),
         },
         tags=["business"],
     )
@@ -126,8 +236,10 @@ class BusinessViewSet(viewsets.ModelViewSet):
                     response.status_code = status.HTTP_201_CREATED
                     access_element_json = AccessRolesSerializer(access_element)
                     response.data = access_element_json.data
+                    response.data["element"] = serializer.data
                     return response
                 response.status_code = status.HTTP_400_BAD_REQUEST
+                response.data = {"data", f"{text_log} Check the data"}
                 return response
             text_log += " Your accout needs to be activated"
             log.info(text_log)
@@ -138,12 +250,13 @@ class BusinessViewSet(viewsets.ModelViewSet):
         except Exception as e:
             text_log += " ERROR => %s" % e.args[0]
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            response.data = {"data", text_log}
+            response.data = {"error", text_log}
             return response
 
     @swagger_auto_schema(
         operation_description="""
-        Получение списка бизнес-элементов с пагинацией.
+        Получение списка бизнес-элементов с пагинацией доступно только для персонала. \
+        Пользователя с правами "`user`" не может получить список.
 
         **Требования к доступу:**
         - Только пользователи с ролью Manager или Admin
@@ -207,7 +320,26 @@ class BusinessViewSet(viewsets.ModelViewSet):
         ],
         responses={
             200: openapi.Response(
-                description="Успешный ответ со списком элементов и метаданными пагинации",
+                description="""
+                {
+                    "data": {
+                        "id": "bf36c6c1-0725-4692-93e4-c32d63cc4ca8",
+                        "created_at": "2025-12-04T08:03:21.956335+07:00",
+                        "updated_at": "2025-12-04T08:03:21.957279+07:00",
+                        "name": "File name 2",
+                        "descriptions": null,
+                        "code": "f3ecbd19-0af5-4fcd-888e-f6445820b6fa",
+                        "access_role": {
+                            "id": "0078af7c-ad65-49a0-914b-8e0a1fd273ef",
+                            "created_at": "2025-12-04T08:03:22.033570+07:00",
+                            "updated_at": "2025-12-04T08:03:22.049862+07:00",
+                            "role": "87e31ac7-3e0b-4ab3-8955-730d594032c9",
+                            "element": "bf36c6c1-0725-4692-93e4-c32d63cc4ca8",
+                            "user": "72e1a6fd-1c3e-4676-b88d-7b6591ddf8c1"
+                        }
+                    }
+                }
+                """,
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
@@ -361,8 +493,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
     )
     async def list(self, request: Request, *args, **kwargs) -> Response:
         """
-        TODO: Можно реализовать выдачу списка для пагинации.
-            В данный момент подаётся весь массив.
+
         :param request:
         :param args:
         :param kwargs:
@@ -426,28 +557,25 @@ class BusinessViewSet(viewsets.ModelViewSet):
                     response.__setattr__("status_code", status.HTTP_404_NOT_FOUND)
                     return response
                 role = await access_role_list.afirst()
+                # ===== GET USER (author the db's line)
                 u = await User.objects.aget(pk=role.user_id)
                 # CHECK - allows access
                 if is_managerOrAdmin(request) or is_owner(request, u):
-                    queryset = self.filter_queryset(self.get_queryset())
-
-                    paginator = self.pagination_class()
-                    page = await asyncio.to_thread(
-                        lambda: paginator.paginate_queryset(queryset, request)
-                    )
-
-                    if page is not None:
-                        serializer = self.get_serializer(page, many=True)
-                        response = paginator.get_paginated_response(serializer.data)
-                        response.__setattr__("status_code", status.HTTP_200_OK)
-                        log.info(f"{text_log} Successfully retrieved page")
+                    # ===== GET DATA from db
+                    element = [view  async for view in self.queryset if view.id == element_id]
+                    if len(element) == 0:
+                        response.data = {"data": "Element not found in db"}
+                        response.__setattr__("status_code", status.HTTP_404_NOT_FOUND)
                         return response
-
-                    # Если пагинация не используется
-                    serializer = self.get_serializer(queryset, many=True)
+                    # ===== CREATE a respose
+                    # Here, it is get data & creating a response
+                    # from some data ( from AccessRolesSerializer & AccessRolesModel)
+                    serializer = self.get_serializer(element[0])
+                    d = serializer.data
+                    d["access_role"] = AccessRolesSerializer(role).data
                     log.info(f"{text_log} Successfully retrieved all data")
                     return Response(
-                        {"data": serializer.data}, status=status.HTTP_200_OK
+                        {"data": d}, status=status.HTTP_200_OK
                     )
             response.data = {"data": "Not OK - you do not have sufficient rights"}
             response.__setattr__("status_code", status.HTTP_403_FORBIDDEN)
@@ -461,9 +589,10 @@ class BusinessViewSet(viewsets.ModelViewSet):
             )
 
     @swagger_auto_schema(
-        # operation_description="""
-        #
-        #                 """,
+        operation_description="""
+        Доступ для удаления записи только у  персонал.
+                        
+                        """,
         manual_parameters=[
             openapi.Parameter(
                 name="id",
@@ -517,7 +646,7 @@ class BusinessViewSet(viewsets.ModelViewSet):
             return response
         try:
             if is_managerOrAdmin(request):
-                business_list = BusinessElementModel.objects.filter(id=kwargs["pk"])
+                business_list = await asyncio.to_thread(lambda : BusinessElementModel.objects.filter(id=kwargs["pk"]))
                 if not await business_list.aexists():
                     response.status_code = status.HTTP_404_NOT_FOUND
                     response.data = {"data": "Not Ok"}
@@ -537,7 +666,99 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.data = {"data", text_log}
             return response
 
-    async def update(self, request: Request, *args, **kwargs) -> Response:
+    @swagger_auto_schema(
+        operation_description="""
+            Доступ к редактированию получит только автор записи и персонал.
+            Если вы с правами "`user`" можете редактировать только свою запись.
+            Персонал имеет возможность редактировать все записи.
+            Работают методы: "`PUT`" "`PATCH`"
+                            """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="id",
+                title="Pathname",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                example="c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+            ),
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="access_token",
+                title="Access Token",
+                type=openapi.TYPE_STRING,
+                required=["access_token"],
+                in_="cookie",
+                description="JWT Access Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="refresh_token",
+                title="Refresh Token",
+                type=openapi.TYPE_STRING,
+                required=["refresh_token"],
+                in_="cookie",
+                description="JWT Refresh Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+        ],
+        responses={
+            200: openapi.Schema(
+                description="""
+                    ***Пример ответа***
+                    ```json
+                    {
+                        "id": "bf36c6c1-0725-4692-93e4-c32d63cc4ca8",
+                        "created_at": "2025-12-04T08:03:21.956335+07:00",
+                        "updated_at": "2025-12-04T09:32:54.116826+07:00",
+                        "name": "Hallo word!",
+                        "descriptions": "Description for Привет мир",
+                        "code": "f3ecbd19-0af5-4fcd-888e-f6445820b6fa"
+                    }
+                    ```
+                    """,
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "id": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="bf36c6c1-0725-4692-93e4-c32d63cc4ca8"
+                    ),
+                    "created_at": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="2025-12-04T08:03:21.956335+07:00"
+                    ),
+                    "updated_at": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="2025-12-04T09:32:54.116826+07:00"
+                    ),
+                    "name": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="Hallo word!",
+                    ),
+                    "descriptions": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="Description for Привет мир",
+                        nullable=True,
+                    ),
+                    "code": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        example="f3ecbd19-0af5-4fcd-888e-f6445820b6fa"
+                    )
+                }
+            ),
+            204: "Removed successfully",
+            401: "Not Ok",
+            500: "Something what wrong. Read the response variable 'data'",
+        },
+        tags=["business"],
+    )
+    def update(self, request, *args, **kwargs):
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
         response = Response()
         if not is_active(request):
@@ -546,19 +767,34 @@ class BusinessViewSet(viewsets.ModelViewSet):
             response.status_code = status.HTTP_401_UNAUTHORIZED
             response.data = {"data", text_log}
             return response
-        # FREEZING
-        k = list(kwargs.keys())[0]
-        v = list(kwargs.values())[0]
-        u_list = User.objects.filter(k=v)
-        if not await u_list.aexists():
-            text_log += " Data was not found"
+        # ==== GET ELEMENT by index of element
+        element_id = kwargs["pk"]
+        u_list = [view for view in self.queryset if element_id == view.id]
+        if len(u_list) == 0:
+            text_log += " Element  was not found by id from url"
             log.info(text_log)
             response.status_code = status.HTTP_404_NOT_FOUND
             response.data = {"data", text_log}
             return response
-        u = u_list.first()
+        # GET ID OF USER from an intermediate table.
+        access_role_list = AccessRolesModel.objects.filter(element=element_id)
+        if not access_role_list.exists():
+            text_log += " Element  was not found to the AccessRolesModel's db "
+            log.info(text_log)
+            response.status_code = status.HTTP_404_NOT_FOUND
+            response.data = {"data", text_log}
+            return response
+        access_role = access_role_list.first()
+        u = access_role.user
+        # CHECK ROLE OF USER
         if is_owner(request, u) or is_managerOrAdmin(request):
-            response = await super().aupdate(request, args, kwargs)
+            try:
+                response = super().update(request, *args, **kwargs)
+            except ValueError as e:
+                response.status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+                response.data = {"data", f"{text_log} {e.args[0]}"}
+                return response
+
             response.status_code = status.HTTP_200_OK
             return response
         text_log += " you do not have sufficient rights"

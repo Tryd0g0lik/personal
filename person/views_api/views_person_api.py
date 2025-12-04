@@ -45,13 +45,10 @@ class UserViews(viewsets.ModelViewSet):
         operation_description="""
                     Четыре обязательных поля. Пароли сверяются на стороне сервера. Если пользователь заполняет\
                     форму эдентичными паролями, значит пароль шифруется и сохраняется. Иначе возвращяем 404 статус код.
-                    Method: POST and the fixed pathname of '/api/auth/person/'\
-                    Example PATHNAME: "{{url_base}}/api/auth/person/"\
-                    @param: str email - обязательное значение.\
-                    @param: str password_confirm - обязательное значение.\
-                    @param: str password - обязательное значение.\
-                    @param: str role - обязательное значение.  От роли зависят ограничения профиля.\
-
+                    **Параметры**
+                    - Method: "`POST`" and the fixed pathname of "`/api/auth/person/`"
+                    - Example PATHNAME: "`{{url_base}}/api/auth/person/`"
+                    
                     """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -193,35 +190,155 @@ class UserViews(viewsets.ModelViewSet):
             response.data.pop("password")
         return response
 
-    async def update(self, request: Request, *args, **kwargs) -> Response:
+    @swagger_auto_schema(
+        operation_description="""
+                Доступ к редактированию получит только автор записи и персонал.
+                Если вы с правами "`user`" можете редактировать только свою запись.
+                Персонал имеет возможность редактировать все записи.
+                Работают методы: "`PUT`" "`PATCH`"
+                                """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="id",
+                title="Pathname",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                example="c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+            ),
+            openapi.Parameter(
+                name="X-CSRFToken",
+                title="CSRF Token",
+                required=["X-CSRFToken"],
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="access_token",
+                title="Access Token",
+                type=openapi.TYPE_STRING,
+                required=["access_token"],
+                in_="cookie",
+                description="JWT Access Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+            openapi.Parameter(
+                name="refresh_token",
+                title="Refresh Token",
+                type=openapi.TYPE_STRING,
+                required=["refresh_token"],
+                in_="cookie",
+                description="JWT Refresh Token",
+                example="nH2qGiehvEXjNiYqp3bOVtAYv....",
+            ),
+        ],
+        responses={
+            200: """
+            {
+                "id": "72e1a6fd-1c3e-4676-b88d-7b6591ddf8c1",
+                "email": "gKU@mail.ru",
+                "is_staff": true,
+                "first_name": null,
+                "is_superuser": false,
+                "is_active": true,
+                "is_sent": false,
+                "is_verified": false,
+                "status": "PROCESS",
+                "last_name": null,
+                "created_at": "2025-12-03T15:23:30.199112+07:00",
+                "updated_at": "2025-12-03T15:23:30.754811+07:00",
+                "username": "Gku"
+            }
+            """,
+            204: "Removed successfully",
+            401: "Not Ok",
+            500: "Something what wrong. Read the response variable 'data'",
+        },
+        tags=["business"],
+    )
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
         response = Response()
-        if not is_active(request):
-            text_log += " Your accout needs to be activated"
-            log.info(text_log)
-            response.status_code = status.HTTP_401_UNAUTHORIZED
-            response.data = {"data", text_log}
-            return response
-        # FREEZING
-        k = list(kwargs.keys())[0]
-        v = list(kwargs.values())[0]
-        u_list = User.objects.filter(k=v)
-        if not await u_list.aexists():
-            text_log += " Data was not found"
-            log.info(text_log)
-            response.status_code = status.HTTP_404_NOT_FOUND
-            response.data = {"data", text_log}
-            return response
-        u = u_list.first()
-        if is_owner(request, u) or request.user.is_admin or is_all(request):
-            response = await super().aupdate(request, args, kwargs)
+        try:
+            if not is_active(request):
+                text_log += " Your accout needs to be activated"
+                log.info(text_log)
+                response.status_code = status.HTTP_401_UNAUTHORIZED
+                response.data = {"data", text_log}
+                return response
+            # UPDATE
+            element_id = kwargs["pk"]
+            u_list = [view  for view in self.queryset if element_id == view.id]
+            if len(u_list) == 0:
+                text_log += " Element  was not found by id from url"
+                log.info(text_log)
+                response.status_code = status.HTTP_404_NOT_FOUND
+                response.data = {"data", text_log}
+                return response
+            u = u_list[0]
+            if is_owner(request, u) or request.user.is_admin or is_all(request):
+                data = dict(request.data)
 
+
+                [setattr(u, k,
+                         data.get(k)[0]
+                         if isinstance(data.get(k), list)
+                         else data.get(k))
+                 for k, v in data.items()]
+                u_dict = dict(self.serializer_class(u).data)
+                u_dict.pop("password")
+                u.save()
+                response.status_code = status.HTTP_200_OK
+                response.data = u_dict
+                return response
+            text_log += " you do not have sufficient rights"
+            log.info(text_log)
+            response.status_code = status.HTTP_403_FORBIDDEN
+            response.data = {"data", text_log}
             return response
-        text_log += " you do not have sufficient rights"
-        log.info(text_log)
-        response.status_code = status.HTTP_403_FORBIDDEN
-        response.data = {"data", text_log}
-        return response
+        except Exception as e:
+            text_log += f" ERROR => {e.args[0]}"
+            log.info(text_log)
+            response.data = {"error": text_log}
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return response
+
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        text_log = "[%s.%s]:" % (self.__class__.__name__, self.update.__name__)
+        response = Response()
+        try:
+            if not is_active(request):
+                text_log += " Your accout needs to be activated"
+                log.info(text_log)
+                response.status_code = status.HTTP_401_UNAUTHORIZED
+                response.data = {"data", text_log}
+                return response
+            # UPDATE
+            element_id = kwargs["pk"]
+            u_list = [view for view in self.queryset if element_id == view.id]
+            if len(u_list) == 0:
+                text_log += " Element  was not found by id from url"
+                log.info(text_log)
+                response.status_code = status.HTTP_404_NOT_FOUND
+                response.data = {"data", text_log}
+                return response
+            u = u_list[0]
+            if is_owner(request, u) or request.user.is_admin or is_all(request):
+                response = super().update(request, *args, **kwargs)
+                return response
+            text_log += " you do not have sufficient rights"
+            log.info(text_log)
+            response.status_code = status.HTTP_403_FORBIDDEN
+            response.data = {"data", text_log}
+            return response
+
+        except Exception as e:
+            text_log += f" ERROR => {e.args[0]}"
+            log.info(text_log)
+            response.data = {"error": text_log}
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return response
+
 
     async def retrieve(self, request: Request, *args, **kwargs) -> Response:
         response = await super().aretrieve(request, *args, **kwargs)
@@ -359,6 +476,46 @@ class UserViews(viewsets.ModelViewSet):
 class ProfileViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
+        descriptions="""
+        Если раннее проводилась попытка - удалить аккаунт, необходимы права \
+             администратора - удалить (вручную) email из 'BlackListModel' db.
+             После этого пользователь может активироваться.
+            Cooockie содержит два токенаЖ
+            - access;
+            - refresh;
+            :return ```json
+             {
+                "data": {
+                    "id": "c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
+                    "email": "gKU@mail.ru",
+                    "role": "Role: staff",
+                    "last_login": null,
+                    "is_superuser": false,
+                    "is_staff": true,
+                    "date_joined": "2025-12-01T15:57:02.286616+07:00",
+                    "created_at": "2025-12-01T15:57:02.286726+07:00",
+                    "updated_at": "2025-12-01T15:57:40.922670+07:00",
+                    "username": "Gku",
+                    "first_name": null,
+                    "last_name": null,
+                    "status": "PROCESS",
+                    "refer": "c9b0fa36-210b-4095-8cb3-5b21bf04f953",
+                    "is_sent": false,
+                    "is_active": true,
+                    "is_verified": false,
+                    "is_admin": false,
+                    "groups": [
+                        3
+                    ],
+                    "user_permissions": []
+                },
+                "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjY4MjgzLCJpYXQiOjE3NjQ1ODE4ODMsImp0aSI6IjFlOTJkYTg2OTg2YzQ3MjhhMjk0OTdjZDM4NDA1ZDA1IiwiZW1haWwiOiJnS1VAbWFpbC5ydSIsImlkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIn0.u1JyXXHVFRvCnZIO95vRlLZ0-UbntTEFQUYQ5bOM2GM",
+                "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2ODI4MCwiaWF0IjoxNzY0NTgxODgwLCJqdGkiOiI2Y2I0MmE4NS0zYWY0LTQ1YWUtYTc4MC00YzUyODVkYzcwYjMiLCJ1c2VyX2lkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZNE1qZ3pMQ0pwWVhRaU9qRTNOalExT0RFNE9ETXNJbXAwYVNJNklqRmxPVEprWVRnMk9UZzJZelEzTWpoaE1qazBPVGRqWkRNNE5EQTFaREExSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSXNJbWxrSWpvaVl6UmxZbUkzTWpJdE9UTXdaQzAwWVdRNUxXRmtNV1V0TWpNM1pXSTBZalF4WXpjd0luMC51MUp5WFhIVkZSdkNuWklPOTV2UmxMWjAtVWJudFRFRlFVWVE1Yk9NMkdNIiwibGlmZXRpbWUiOjg2NDMwMC4wfQ.NLOYV52mIgX-axeuMLbMsAdFOTYWy4ZVlviwWZxWaY4",
+                "access_expires": 1764668283,
+                "refresh_expires": 1764668280
+            }
+        ```
+        """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             title="UserActivate",
@@ -469,51 +626,7 @@ class ProfileViewSet(viewsets.ViewSet):
         tags=["person"],
     )
     async def active(self, request: Request, *args, **kwargs) -> Response:
-        """ "
-            TODO: Для 'BlackListModel' наладить CRUD для возвращения пользователю аккаунт.
-                Запрос на удаление аккаунта, добавляет аккаунт в чёрный список - 'BlackListModel' db. После,
-                 пользователь не может авторизоваться.
-                Повторный запрос на удаление аккаунта (от пользователя с правами администратора и супервользователя)
-                удаляет аккаунт из db.
-            Если раннее проводилась попытка - удалить аккаунт, необходимы права \
-             администратора - удалить (вручную) email из 'BlackListModel' db.
-             После этого пользователь может активироваться.
-            Cooockie содержит два токенаЖ
-            - access;
-            - refresh;
-            :return ```text
-             {
-                "data": {
-                    "id": "c4ebb722-930d-4ad9-ad1e-237eb4b41c70",
-                    "email": "gKU@mail.ru",
-                    "role": "Role: staff",
-                    "last_login": null,
-                    "is_superuser": false,
-                    "is_staff": true,
-                    "date_joined": "2025-12-01T15:57:02.286616+07:00",
-                    "created_at": "2025-12-01T15:57:02.286726+07:00",
-                    "updated_at": "2025-12-01T15:57:40.922670+07:00",
-                    "username": "Gku",
-                    "first_name": null,
-                    "last_name": null,
-                    "status": "PROCESS",
-                    "refer": "c9b0fa36-210b-4095-8cb3-5b21bf04f953",
-                    "is_sent": false,
-                    "is_active": true,
-                    "is_verified": false,
-                    "is_admin": false,
-                    "groups": [
-                        3
-                    ],
-                    "user_permissions": []
-                },
-                "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0NjY4MjgzLCJpYXQiOjE3NjQ1ODE4ODMsImp0aSI6IjFlOTJkYTg2OTg2YzQ3MjhhMjk0OTdjZDM4NDA1ZDA1IiwiZW1haWwiOiJnS1VAbWFpbC5ydSIsImlkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIn0.u1JyXXHVFRvCnZIO95vRlLZ0-UbntTEFQUYQ5bOM2GM",
-                "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NDY2ODI4MCwiaWF0IjoxNzY0NTgxODgwLCJqdGkiOiI2Y2I0MmE4NS0zYWY0LTQ1YWUtYTc4MC00YzUyODVkYzcwYjMiLCJ1c2VyX2lkIjoiYzRlYmI3MjItOTMwZC00YWQ5LWFkMWUtMjM3ZWI0YjQxYzcwIiwiYWNjZXNzX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjBiMnRsYmw5MGVYQmxJam9pWVdOalpYTnpJaXdpWlhod0lqb3hOelkwTmpZNE1qZ3pMQ0pwWVhRaU9qRTNOalExT0RFNE9ETXNJbXAwYVNJNklqRmxPVEprWVRnMk9UZzJZelEzTWpoaE1qazBPVGRqWkRNNE5EQTFaREExSWl3aVpXMWhhV3dpT2lKblMxVkFiV0ZwYkM1eWRTSXNJbWxrSWpvaVl6UmxZbUkzTWpJdE9UTXdaQzAwWVdRNUxXRmtNV1V0TWpNM1pXSTBZalF4WXpjd0luMC51MUp5WFhIVkZSdkNuWklPOTV2UmxMWjAtVWJudFRFRlFVWVE1Yk9NMkdNIiwibGlmZXRpbWUiOjg2NDMwMC4wfQ.NLOYV52mIgX-axeuMLbMsAdFOTYWy4ZVlviwWZxWaY4",
-                "access_expires": 1764668283,
-                "refresh_expires": 1764668280
-            }
-        ```
-        """
+
         text_log = "[%s.%s]:" % (self.__class__.__name__, self.active.__name__)
         data = request.data
         email = data.get("email")
