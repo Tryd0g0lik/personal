@@ -80,7 +80,7 @@ jobs:
                     SMTP_PORT: 465
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-                    DB_ENGINE: django.db.backends.postgresql
+                    DB_ENGINE: "django.db.backends.postgresql"
                     IS_DEBUG: 0
                     POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
                     POSTGRES_USER:  ${{ secrets.POSTGRES_DB_USER }}
