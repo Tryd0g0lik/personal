@@ -22,7 +22,7 @@ jobs:
             postgres:
                 image: postgres:14
                 env:
-                    POSTGRES_USER: ${{  env.POSTGRES_DB_USER  }}
+                    POSTGRES_USER: ${{  env.POSTGRES_USER  }}
                     POSTGRES_PASSWORD: ${{  env.POSTGRES_PASSWORD  }}
                     POSTGRES_DB: test_d
                 options: >-
