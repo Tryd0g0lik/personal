@@ -33,7 +33,7 @@ services:
             - |
                 python3 ./manage.py shell -c "
                   print( 'Waiting when - database was done')
-                  createdb -U $$$$POSTGRES_USER $$POSTGRES_DB
+                  createdb -U $$POSTGRES_USER $$POSTGRES_DB
                 until pg_isready -h $$POSTGRES_HOST -p 5432 -U $$POSTGRES_USER; do
                   print('Waiting for database...')
                   sleep 2

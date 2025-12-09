@@ -342,7 +342,6 @@ class UserViews(viewsets.ModelViewSet):
 
     async def retrieve(self, request: Request, *args, **kwargs) -> Response:
         response = await super().aretrieve(request, *args, **kwargs)
-        pass
         if isinstance(response.data, list):
             response.data[0].pop("password")
         if isinstance(response.data, dict):
