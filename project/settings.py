@@ -74,6 +74,7 @@ SESSION_COOKIE_AGE = 86400
 # ''' Quantity of admin & superuser '''
 IS_ADMIN = os.getenv("IS_ADMIN", "4")
 IS_SUPERUSER = os.getenv("IS_SUPERUSER", "1")
+DJANGO_ENV = f'{os.getenv("DJANGO_ENV", "production")}'
 
 
 
@@ -85,7 +86,7 @@ AUTHENTIFICATION_STATUS = [
     ("COMPLETED", _("Completed of authentification")),
 ]
 
-DJANGO_ENV = f"{os.environ.get("DJANGO_ENV")}"
+
 configure_logging(logging.INFO)
 log = logging.getLogger(__name__)
 # Quick-start development settings - unsuitable for production
@@ -180,7 +181,7 @@ else:
             "KEY_PREFIX": "person_",
         }
     }
-    log.info("DB: run the postgres 'person_db.sqlite3'")
+    log.info("DB: run the postgres 'person_db' of postgres")
 # DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 SECURE_BROWSER_XSS_FILTER = True
