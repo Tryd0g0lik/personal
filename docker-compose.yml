@@ -78,6 +78,7 @@ services:
 
 volumes:
     volume_static:
+    postgres_data:
 
 networks:
     backend:
