@@ -39,7 +39,7 @@ APP_TIME_ZONE = os.getenv("APP_TIME_ZONE", "")
 # db production
 POSTGRES_DB = os.getenv("POSTGRES_DB", "person_db")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "0.0.0.0")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "")
 
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
@@ -356,7 +356,6 @@ PASSWORD_HASHERS = [
 CORS_ORIGIN_ALLOW_ALL = True
 # Here, we allow the URL list for publicated
 CORS_ALLOWED_ORIGINS = [
-    "http://0.0.0.0:8000",
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
     f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
     "http://127.0.0.1:8000",
@@ -366,7 +365,7 @@ CORS_ALLOWED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
 # This is list from private of URL
 CSRF_TRUSTED_ORIGINS = [
-    "http://0.0.0.0:8000",
+
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
     f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
     "http://127.0.0.1:8000",
