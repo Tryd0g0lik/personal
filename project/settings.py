@@ -177,7 +177,7 @@ else:
             "NAME": f"{POSTGRES_DB}",
             "USER": f"{POSTGRES_USER}",
             "PASSWORD": f"{POSTGRES_PASSWORD}",
-            "HOST": "db",
+            "HOST": f"{POSTGRES_HOST}",
             "PORT": f"{POSTGRES_PORT}",
             "KEY_PREFIX": "person_",
             "OPTIONS": {
