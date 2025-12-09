@@ -159,4 +159,4 @@ jobs:
                     username: ${{  env.DEPLOY_USER  }}
                     password: ${{  env.DEPLOY_PASSWORD  }}
                     script: |
-                        expect /home/denis/redis/pull.exp
+                        expect /home/denis/personal/pull.exp

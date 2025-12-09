@@ -171,13 +171,11 @@ elif DEBUG:
 else:
     def get_db_host():
         try:
-
-            return "0.0.0.0"
+            return 'db'
         except:
-            try:
-                return  f"{POSTGRES_HOST}"  # Use container name
-            except:
-                return 'db'
+
+            return  f"{POSTGRES_HOST}"  # Use container name
+
     # PRODUCTION
     DATABASES = {
         "default": {
