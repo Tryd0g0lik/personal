@@ -12,6 +12,6 @@ RUN python -m pip install --upgrade "pip>=25.0"
 # --no-cache-dir
 RUN pip install -r requirements.txt
 COPY . .
-RUN rm -rf wink/migrations && \
-    mkdir wink/migrations
+RUN rm -rf person/migrations && \
+    mkdir person/migrations
 COPY person/__init__.py person/migrations/__init__.py

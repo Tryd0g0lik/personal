@@ -1,5 +1,5 @@
 """
-wink/interfaces.py
+person/interfaces.py
 
 This file is the analogue for 'interfaces.ts' of file from Typescript.
 """
@@ -34,7 +34,7 @@ class Intermediate(TypedDict):
     updated_at: str
 
 
-# wink/wink_api/upload_files.py
+# person/wink_api/upload_files.py
 A = TypeVar("A", bound=View)
 B = TypeVar("B", bound=APIView)
 C = TypeVar("C", bound=ModelViewSet)
