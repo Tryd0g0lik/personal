@@ -171,7 +171,7 @@ elif DEBUG:
 else:
     def get_db_host():
         try:
-            f"{POSTGRES_HOST}"
+            return f"{POSTGRES_HOST}"
         except:
 
             return  'db'  # Use container name
