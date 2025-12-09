@@ -176,12 +176,15 @@ else:
             "NAME": f"{POSTGRES_DB}",
             "USER": f"{POSTGRES_USER}",
             "PASSWORD": f"{POSTGRES_PASSWORD}",
-            "HOST": f"{POSTGRES_HOST}",
+            "HOST": "db",
             "PORT": f"{POSTGRES_PORT}",
             "KEY_PREFIX": "person_",
+            "OPTIONS": {
+                "connect_timeout": 30,
+            }
         }
     }
-    log.info("DB: run the %s %s of %s", ("postgres",'person_db', "postgres"))
+    log.info("DB: RUN")
 # DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 SECURE_BROWSER_XSS_FILTER = True
