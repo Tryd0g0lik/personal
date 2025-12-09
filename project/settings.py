@@ -169,6 +169,15 @@ elif DEBUG:
     }
     log.info("DB: run 'person_db.sqlite3'")
 else:
+    def get_db_host():
+        try:
+
+            return 'db'
+        except:
+            try:
+                return  f"{POSTGRES_HOST}"  # Use container name
+            except:
+                return f"0.0.0.0"
     # PRODUCTION
     DATABASES = {
         "default": {
@@ -176,7 +185,7 @@ else:
             "NAME": f"{POSTGRES_DB}",
             "USER": f"{POSTGRES_USER}",
             "PASSWORD": f"{POSTGRES_PASSWORD}",
-            "HOST": f"{POSTGRES_HOST}",
+            "HOST": get_db_host(),
             "PORT": f"{POSTGRES_PORT}",
             "KEY_PREFIX": "person_",
             "OPTIONS": {
