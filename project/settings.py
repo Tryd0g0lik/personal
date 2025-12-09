@@ -149,7 +149,7 @@ if DJANGO_ENV == "testing":
     else:
         DATABASES = {
             "default": {
-                "ENGINE": f"{DB_ENGINE}",
+                "ENGINE": "django.db.backends.postgresql",
                 "NAME": os.getenv("TEST_DB_NAME", "test_myapp_db"),
                 "USER": os.getenv("TEST_DB_USER", "test_user"),
                 "PASSWORD": os.getenv("TEST_DB_PASSWORD", "test_password"),
@@ -171,7 +171,7 @@ else:
     # PRODUCTION
     DATABASES = {
         "default": {
-            "ENGINE": f"{DB_ENGINE}",
+            "ENGINE": f"django.db.backends.postgresql",
             "NAME": f"{POSTGRES_DB}",
             "USER": f"{POSTGRES_USER}",
             "PASSWORD": f"{POSTGRES_PASSWORD}",
