@@ -39,7 +39,7 @@ APP_TIME_ZONE = os.getenv("APP_TIME_ZONE", "")
 # db production
 POSTGRES_DB = os.getenv("POSTGRES_DB", "person_db")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "0.0.0.0")
 
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
@@ -181,7 +181,7 @@ else:
             "KEY_PREFIX": "person_",
         }
     }
-    log.info("DB: run the postgres 'person_db' of postgres")
+    log.info("DB: run the %s %s of %s", ("postgres",'person_db', "postgres"))
 # DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
 SECURE_BROWSER_XSS_FILTER = True
