@@ -1,0 +1,99 @@
+services:
+    db:
+        container_name: postgres_person
+        image: postgres
+        env_file: ./.env
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_HOST_AUTH_METHOD=trust
+#            - POSTGRES_MULTIPLE_DATABASES=${POSTGRES_MULTIPLE_DATABASES}
+        restart: unless-stopped
+        healthcheck:
+            test: [ 'CMD-SHELL', 'pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}' ]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        ports:
+            - "5432:5432"
+        networks:
+            - database
+        volumes:
+            - postgres_data:/var/lib/postgresql/18/data
+    backend:
+        container_name: person
+        build:
+            dockerfile: ./Dockerfile
+            context: .
+        env_file: ./.env
+
+        command:
+            - bash
+            - -c
+            - |
+                python3 ./manage.py shell -c "
+                  print( 'Waiting when - database was done')
+                until pg_isready -h db -p 5432 -U $$POSTGRES_USER; do
+                  print('Waiting for database...')
+                  sleep 2
+                done
+
+                prin('Database is ready! Starting migrations...')
+                "
+                python3 ./manage.py migrate person zero
+                Get-ChildItem person/migrations/*.py | Where-Object {$_.Name -ne "__init__.py"} | Remove-Item
+                python3 ./manage.py makemigrations
+                python3 ./manage.py migrate
+                python3 ./manage.py collectstatic --clear --noinput
+                daphne -b 0.0.0.0 -p 8000 project.asgi:application
+
+        volumes:
+            - ./:/www/src
+            - volume_static:/www/src/collectstatic
+        depends_on:
+            - db
+        ports:
+            - "8000:8000"
+        networks:
+            - database
+            - backend
+    nginx:
+        container_name: nginx_person
+        build:
+            context: ./nginx
+            dockerfile: Dockerfile
+        depends_on:
+            - backend
+            - db
+        volumes:
+            - volume_static:/www/src/collectstatic
+        restart: on-failure
+        ports:
+            - "80:80"
+        networks:
+            - backend
+            - database
+    
+
+volumes:
+    volume_static:
+
+networks:
+    backend:
+        driver: bridge
+        driver_opts:
+            com.docker.network.driver.mtu: 1450 # Option from REG.ru
+    database:
+        driver: bridge
+#        internal: true
+        driver_opts:
+            com.docker.network.driver.mtu: 1450 # Option from REG.ru
+    queue:
+        driver: bridge
+        driver_opts:
+            com.docker.network.driver.mtu: 1450 # Option from REG.ru
+    frontend:
+        driver: bridge
+        driver_opts:
+            com.docker.network.driver.mtu: 1450 # Option from REG.ru
