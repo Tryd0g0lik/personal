@@ -172,12 +172,12 @@ else:
     def get_db_host():
         try:
 
-            return 'db'
+            return "0.0.0.0"
         except:
             try:
                 return  f"{POSTGRES_HOST}"  # Use container name
             except:
-                return f"0.0.0.0"
+                return 'db'
     # PRODUCTION
     DATABASES = {
         "default": {
