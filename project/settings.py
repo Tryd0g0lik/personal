@@ -37,6 +37,7 @@ APP_PORT = os.getenv("APP_PORT", "")
 APP_TIME_ZONE = os.getenv("APP_TIME_ZONE", "")
 
 # db production
+POSTGRES_DB_PASSWORD = os.getenv("POSTGRES_DB_PASSWORD", "")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "")
