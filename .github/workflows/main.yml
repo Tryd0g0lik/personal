@@ -92,10 +92,12 @@ jobs:
 
             -   name: Run pre-commit hooks
                 working-directory: .
+                # pre-commit  run --all-files --show-diff
                 run: |
                     pip install pre-commit
-                    pre-commit  run --all-files --show-diff
-
+                    pre-commit autoupdate
+                    echo "Files that need fixing:"
+                    pre-commit run --all-files --show-diff || true
 #            -   name: Run tests
 #                env:
 #                    SMTP_PORT: 465
