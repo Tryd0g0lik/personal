@@ -14,7 +14,6 @@ jobs:
             POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_PORT: ${{ secrets.POSTGRES_DB_PORT }}
             POSTGRES_HOST: ${{ secrets.POSTGRES_DB_HOST }}
-            DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
             IS_DEBUG: 0
             DJANGO_ENV: "production"
             DATABASE_URL: "postgresql://${{  secrets.POSTGRES_DB_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ secrets.POSTGRES_DB_HOST }}:${{ secrets.POSTGRES_DB_PORT }}/${{ secrets.POSTGRES_DB  }}"
@@ -87,7 +86,6 @@ jobs:
                     SMTP_PORT: 465
                     DJANGO_ENV: ${{ env.DJANGO_ENV }}
                     ENGINE: "django.db.backends.postgresql"
-                    SECRET_KEY_DJ: ${{ env.SECRET_KEY }}
                     SECRET_KEY: ${{ env.SECRET_KEY }}
                     IS_DEBUG: 0
                     POSTGRES_DB: ${{ env.POSTGRES_DB }}
@@ -105,7 +103,6 @@ jobs:
                     DJANGO_ENV: ${{ env.DJANGO_ENV }}
                     IS_DEBUG: 0
                     ENGINE: "django.db.backends.postgresql"
-                    SECRET_KEY_DJ: ${{ env.SECRET_KEY }}
                     SECRET_KEY: ${{ env.SECRET_KEY }}
                     POSTGRES_DB: ${{ env.POSTGRES_DB }}
                     POSTGRES_USER:  ${{ env.POSTGRES_USER }}

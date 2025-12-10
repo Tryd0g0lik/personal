@@ -8,7 +8,7 @@ configure_logging(logging.INFO)
 log = logging.getLogger(__name__)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRET_KEY_DJ
+
 
 
 # '''CORS'''

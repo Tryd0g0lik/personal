@@ -12,6 +12,7 @@ IS_DEBUG = os.getenv("IS_DEBUG", "1")
 # '''' .ENV ''''
 
 DJANGO_SETTINGS_MODULE = os.getenv("DJANGO_SETTINGS_MODULE", "")
+SECRET_KEY = os.getenv("SECRET_KEY", "")
 
 # APP
 APP_PROTOCOL = os.getenv("APP_PROTOCOL", "")
