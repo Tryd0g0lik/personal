@@ -9,10 +9,11 @@ jobs:
         name: Test Backend
         runs-on: ubuntu-latest
         env:
+            POSTGRES_DB: ${{ secrets.POSTGRES_DB }} 
             POSTGRES_USER: ${{ secrets.POSTGRES_DB_USER }}
             POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB_PORT: ${{ secrets.POSTGRES_DB_PORT }}
-            POSTGRES_DB_HOST: ${{ secrets.POSTGRES_DB_HOST }}
+            POSTGRES_PORT: ${{ secrets.POSTGRES_DB_PORT }}
+            POSTGRES_HOST: ${{ secrets.POSTGRES_DB_HOST }}
             DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
             IS_DEBUG: 0
             DJANGO_ENV: "production"
@@ -66,31 +67,52 @@ jobs:
                     python -m pip install --upgrade pip
                     pip install -r requirements.txt
                     pip install pytest pytest-asyncio pytest-django pytest-cov
-
+            
+            - name: Create test .env file
+              run: |
+                cat > .env << EOF
+                POSTGRES_DB=test_d
+                POSTGRES_USER=${{ env.POSTGRES_USER }}
+                POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
+                POSTGRES_HOST=127.0.0.1
+                POSTGRES_PORT=5432
+                DJANGO_ENV=production
+                IS_DEBUG=0
+                SECRET_KEY=${{ env.SECRET_KEY }}
+                EOF
+                cat .env
+                
             -   name: Run makemigrations
                 env:
                     SMTP_PORT: 465
-                    DJANGO_ENV: "production"
+                    DJANGO_ENV: ${{ env.DJANGO_ENV }}
                     ENGINE: "django.db.backends.postgresql"
-                    SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
-                    SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+                    SECRET_KEY_DJ: ${{ env.SECRET_KEY }}
+                    SECRET_KEY: ${{ env.SECRET_KEY }}
                     IS_DEBUG: 0
+                    POSTGRES_DB: ${{ env.POSTGRES_DB }}
+                    POSTGRES_USER: ${{ env.POSTGRES_USER }}
+                    POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+                    POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+                    POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+                    DATABASE_URL: ${{ env.DATABASE_URL }}
                 run: |
                     python ./manage.py makemigrations
 
             -   name: Run migrate
                 env:
                     SMTP_PORT: 465
-                    DJANGO_ENV: "production"
+                    DJANGO_ENV: ${{ env.DJANGO_ENV }}
                     IS_DEBUG: 0
                     ENGINE: "django.db.backends.postgresql"
-                    SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
-                    SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-                    POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-                    POSTGRES_USER:  ${{ secrets.POSTGRES_DB_USER }}
-                    POSTGRES_PASSWORD:  ${{ secrets.POSTGRES_PASSWORD }}
-                    POSTGRES_PORT: ${{ secrets.POSTGRES_DB_PORT }}
-                    POSTGRES_HOST: ${{ secrets.POSTGRES_DB_HOST }}
+                    SECRET_KEY_DJ: ${{ env.SECRET_KEY }}
+                    SECRET_KEY: ${{ env.SECRET_KEY }}
+                    POSTGRES_DB: ${{ env.POSTGRES_DB }}
+                    POSTGRES_USER:  ${{ env.POSTGRES_USER }}
+                    POSTGRES_PASSWORD:  ${{ env.POSTGRES_PASSWORD }}
+                    POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+                    POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+               
                 run: |
                     python manage.py migrate
 

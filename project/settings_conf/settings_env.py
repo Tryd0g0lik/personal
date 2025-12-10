@@ -10,7 +10,7 @@ dotenv.load_dotenv()
 IS_DEBUG = os.getenv("IS_DEBUG", "1")
 
 # '''' .ENV ''''
-SECRET_KEY_DJ = os.getenv("SECRET_KEY_DJ", "")
+
 DJANGO_SETTINGS_MODULE = os.getenv("DJANGO_SETTINGS_MODULE", "")
 
 # APP
