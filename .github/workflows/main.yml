@@ -14,10 +14,11 @@ jobs:
             POSTGRES_DB_PORT: ${{ secrets.POSTGRES_DB_PORT }}
             POSTGRES_DB_HOST: ${{ secrets.POSTGRES_DB_HOST }}
             DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-            IS_DEBUG: ${{ secrets.IS_DEBUG}}
+            IS_DEBUG: 0
+            DJANGO_ENV: "production"
             DATABASE_URL: "postgresql://${{  secrets.POSTGRES_DB_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ secrets.POSTGRES_DB_HOST }}:${{ secrets.POSTGRES_DB_PORT }}/${{ secrets.POSTGRES_DB  }}"
             SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-            DEBUG: "False"
+       
         services:
             postgres:
                 image: postgres:14
@@ -69,6 +70,7 @@ jobs:
             -   name: Run makemigrations
                 env:
                     SMTP_PORT: 465
+                    DJANGO_ENV: "production"
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
                     IS_DEBUG: 0
@@ -78,7 +80,8 @@ jobs:
             -   name: Run migrate
                 env:
                     SMTP_PORT: 465
-                    IS_DEBUG: ${{ secrets.IS_DEBUG}}
+                    DJANGO_ENV: "production"
+                    IS_DEBUG: 0
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
                     POSTGRES_DB: ${{ secrets.POSTGRES_DB }}

@@ -23,8 +23,9 @@ def get_allowed_hosts(allowed_hosts: str):
     hosts = [h.strip() for h in hosts if h.strip()]
 
     if DJANGO_ENV == "production":
-        hosts = [
-            f"{APP_HOST_REMOTE}".strip(),
+        hosts += [
+            "83.166.245.209",
+            "172.19.0.2",
             "db",
             "backend",
             "nginx",
