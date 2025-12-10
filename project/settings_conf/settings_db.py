@@ -58,7 +58,7 @@ try:
                 }
             }
             log.info("DB: run 'test_person_db.sqlite3'")
-        else:
+        elif not DEBUG and DJANGO_ENV == "testing":
             DATABASES = {
                 "default": {
                     "ENGINE": "django.db.backends.postgresql",
@@ -114,7 +114,4 @@ except Exception as e:
             "NAME": BASE_DIR / "fallback.db",
         }
     }
-print(f"DEBUG: {DEBUG}")
-print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
-print(f"DATABASES ENGINE: {DATABASES['default']['ENGINE']}")
-print(f"DATABASES NAME: {DATABASES['default'].get('NAME')}")
+
