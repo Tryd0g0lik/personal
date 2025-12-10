@@ -19,6 +19,7 @@ CORS_ALLOWED_ORIGINS = [
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
     f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
     "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
 
 # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#csrf-integration
@@ -29,6 +30,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
     f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
     "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
 # Allow the cookie in HTTP request.
 CORS_ALLOW_CREDENTIALS = True

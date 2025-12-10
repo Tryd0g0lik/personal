@@ -1,7 +1,7 @@
 import os
 
 import dotenv
-
+from pathlib import Path
 dotenv.load_dotenv()
 IS_DEBUG = os.getenv("IS_DEBUG", "1")
 
@@ -56,3 +56,6 @@ SESSION_COOKIE_AGE = 86400
 IS_ADMIN = os.getenv("IS_ADMIN", "4")
 IS_SUPERUSER = os.getenv("IS_SUPERUSER", "1")
 DJANGO_ENV = f'{os.getenv("DJANGO_ENV", "production")}'
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent

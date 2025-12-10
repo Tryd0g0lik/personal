@@ -39,7 +39,7 @@ def get_allowed_hosts(allowed_hosts: str):
         raise ImproperlyConfigured(text_e)
     return hosts
 
-# try:
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 ALLOWED_HOSTS = get_allowed_hosts("127.0.0.1, localhost")
