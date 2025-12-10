@@ -171,7 +171,7 @@ jobs:
             DEPLOY_USER: ${{  secrets.SSH_USER  }}
             DEPLOY_KEY: ${{ secrets.SSH_KEY }}
             DEPLOY_PASSWORD: ${{  secrets.SSH_PASSWORD  }}
-        needs: deploy_person
+        needs: test_person
         steps:
             -   name: Deploy to GitHub Pages
                 uses: appleboy/ssh-action@master
