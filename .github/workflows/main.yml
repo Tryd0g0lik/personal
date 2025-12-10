@@ -155,7 +155,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                python-version: [ '3.12' ]
+                python-version: [ '3.13' ]
         steps:
             # cache remove
             -   name: Clear GitHub Actions cache
@@ -165,12 +165,13 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                python-version: [ '3.12' ]
+                python-version: [ '3.13' ]
         env:
             DEPLOY_HOST: ${{  secrets.POSTGRES_DB_HOST  }}
             DEPLOY_USER: ${{  secrets.SSH_USER  }}
+            DEPLOY_KEY: ${{ secrets.SSH_KEY }}
             DEPLOY_PASSWORD: ${{  secrets.SSH_PASSWORD  }}
-        needs: test_person
+        needs: deploy_person
         steps:
             -   name: Deploy to GitHub Pages
                 uses: appleboy/ssh-action@master
