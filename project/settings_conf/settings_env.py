@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 print(f"===BASE_DIR=================== {BASE_DIR} ======================BASE_DIR=====")
 dotenv.load_dotenv()
 IS_DEBUG = os.getenv("IS_DEBUG", "1")
-
+DEBUG = True if int(IS_DEBUG) == 1 else False
 # '''' .ENV ''''
 
 DJANGO_SETTINGS_MODULE = os.getenv("DJANGO_SETTINGS_MODULE", "")

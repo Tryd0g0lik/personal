@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if int(IS_DEBUG) == 1 else False
+
 print(f"DEBUG: {DEBUG}, DJANGO_ENV: {DJANGO_ENV}")
 
 # """" HOST """"
