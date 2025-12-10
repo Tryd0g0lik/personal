@@ -69,19 +69,7 @@ jobs:
                     pip install -r requirements.txt
                     pip install pytest pytest-asyncio pytest-django pytest-cov
             
-            - name: Create test .env file
-              run: |
-                cat > .env << EOF
-                POSTGRES_DB=test_d
-                POSTGRES_USER=${{ env.POSTGRES_USER }}
-                POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
-                POSTGRES_HOST=127.0.0.1
-                POSTGRES_PORT=5432
-                DJANGO_ENV=production
-                IS_DEBUG=0
-                SECRET_KEY=${{ env.SECRET_KEY }}
-                EOF
-                cat .env
+            
                 
             -   name: Run makemigrations
                 env:
