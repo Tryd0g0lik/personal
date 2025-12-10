@@ -4,8 +4,8 @@ import dotenv
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-print(f"====================== {BASE_DIR} ===========================")
+BASE_DIR = Path(__file__).resolve().parent.parent
+print(f"===BASE_DIR=================== {BASE_DIR} ======================BASE_DIR=====")
 dotenv.load_dotenv()
 IS_DEBUG = os.getenv("IS_DEBUG", "1")
 
