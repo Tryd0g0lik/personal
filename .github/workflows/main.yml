@@ -79,7 +79,7 @@ jobs:
             -   name: Run migrate
                 env:
                     SMTP_PORT: 465
-                    IS_DEBUG: ${{ secret.IS_DEBUG}}
+                    IS_DEBUG: ${{ secrets.IS_DEBUG}}
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
                     DB_ENGINE: "django.db.backends.postgresql"
