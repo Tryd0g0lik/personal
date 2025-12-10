@@ -39,71 +39,82 @@ def get_allowed_hosts(allowed_hosts: str):
         log.error(text_e)
         raise ImproperlyConfigured(text_e)
     return hosts
-print("=======settings_db.py=================")
-print("=== DATABASE CONFIGURATION DEBUG ===")
-print(f"DJANGO_ENV: {DJANGO_ENV}")
-print(f"DEBUG: {DEBUG}")
-print(f"IS_DEBUG: {IS_DEBUG}")
-print(f"POSTGRES_HOST: {POSTGRES_HOST}")
-print(f"POSTGRES_DB: {POSTGRES_DB}")
-print(f"POSTGRES_USER: {POSTGRES_USER}")
-print(f"POSTGRES_PORT: {POSTGRES_PORT}")
-print(f"Database variables type check:")
-print(f"  POSTGRES_HOST type: {type(POSTGRES_HOST)}")
-print(f"  POSTGRES_DB type: {type(POSTGRES_DB)}")
-print(f"  POSTGRES_USER type: {type(POSTGRES_USER)}")
+
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 ALLOWED_HOSTS = get_allowed_hosts("127.0.0.1, localhost")
 # """" DATABASE """"
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-if DJANGO_ENV == "testing":
-    log.info(f"DJANGO_ENV == 'testing'': {DJANGO_ENV == "testing"}")
-    # TESTING
-    if DEBUG:
+try:
+    # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+    if DJANGO_ENV == "testing":
+        log.info(f"DJANGO_ENV == 'testing'': {DJANGO_ENV == "testing"}")
+        # TESTING
+        if DEBUG:
+            DATABASES = {
+                "default": {
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": BASE_DIR / "test_person_db.sqlite3",
+                }
+            }
+            log.info("DB: run 'test_person_db.sqlite3'")
+        else:
+            DATABASES = {
+                "default": {
+                    "ENGINE": "django.db.backends.postgresql",
+                    "NAME": os.getenv("TEST_DB_NAME", "test_myapp_db"),
+                    "USER": os.getenv("TEST_DB_USER", "test_user"),
+                    "PASSWORD": os.getenv("TEST_DB_PASSWORD", "test_password"),
+                    "HOST": f"{POSTGRES_HOST}",
+                    "PORT": f"{POSTGRES_PORT}",
+                }
+            }
+            print(f"✓ Successfully configured database")
+            print(f"  Engine: {DATABASES['default']['ENGINE']}")
+            print(f"  Name: {DATABASES['default'].get('NAME', 'N/A')}")
+            print(f"  Host: {DATABASES['default'].get('HOST', 'N/A')}")
+            log.info("DB: run the postgres 'test_person_db.sqlite3'")
+    elif DEBUG:
+        # DEVELOPMENT
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "test_person_db.sqlite3",
+                "NAME": BASE_DIR / "person_db.sqlite3",
             }
         }
-        log.info("DB: run 'test_person_db.sqlite3'")
+        log.info("DB: run 'person_db.sqlite3'")
     else:
+
+        # PRODUCTION
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.postgresql",
-                "NAME": os.getenv("TEST_DB_NAME", "test_myapp_db"),
-                "USER": os.getenv("TEST_DB_USER", "test_user"),
-                "PASSWORD": os.getenv("TEST_DB_PASSWORD", "test_password"),
+                "NAME": f"{POSTGRES_DB}",
+                "USER": f"{POSTGRES_USER}",
+                "PASSWORD": f"{POSTGRES_PASSWORD}",
                 "HOST": f"{POSTGRES_HOST}",
                 "PORT": f"{POSTGRES_PORT}",
+                "KEY_PREFIX": "person_",
+                "OPTIONS": {
+                    "connect_timeout": 30,
+                }
             }
         }
-        log.info("DB: run the postgres 'test_person_db.sqlite3'")
-elif DEBUG:
-    # DEVELOPMENT
+        print(f"✓ Successfully configured database")
+        print(f"  Engine: {DATABASES['default']['ENGINE']}")
+        print(f"  Name: {DATABASES['default'].get('NAME', 'N/A')}")
+        print(f"  Host: {DATABASES['default'].get('HOST', 'N/A')}")
+        log.info("DB: RUN")
+except Exception as e:
+    print(f"✗ ERROR configuring database: {e}")
+    print("Falling back to SQLite")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "person_db.sqlite3",
+            "NAME": BASE_DIR / "fallback.db",
         }
     }
-    log.info("DB: run 'person_db.sqlite3'")
-else:
-
-    # PRODUCTION
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": f"{POSTGRES_DB}",
-            "USER": f"{POSTGRES_USER}",
-            "PASSWORD": f"{POSTGRES_PASSWORD}",
-            "HOST": f"{POSTGRES_HOST}",
-            "PORT": f"{POSTGRES_PORT}",
-            "KEY_PREFIX": "person_",
-            "OPTIONS": {
-                "connect_timeout": 30,
-            }
-        }
-    }
-    log.info("DB: RUN")
+print(f"DEBUG: {DEBUG}")
+print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+print(f"DATABASES ENGINE: {DATABASES['default']['ENGINE']}")
+print(f"DATABASES NAME: {DATABASES['default'].get('NAME')}")

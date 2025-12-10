@@ -12,19 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from django.utils.translation import gettext_lazy as _
 from project.settings_conf.settings_options import *
 from project.settings_conf.settings_security import *
-print("=======settings.py=================")
-print("=== DATABASE CONFIGURATION DEBUG ===")
-print(f"DJANGO_ENV: {DJANGO_ENV}")
-print(f"DEBUG: {DEBUG}")
-print(f"IS_DEBUG: {IS_DEBUG}")
-print(f"POSTGRES_HOST: {POSTGRES_HOST}")
-print(f"POSTGRES_DB: {POSTGRES_DB}")
-print(f"POSTGRES_USER: {POSTGRES_USER}")
-print(f"POSTGRES_PORT: {POSTGRES_PORT}")
-print(f"Database variables type check:")
-print(f"  POSTGRES_HOST type: {type(POSTGRES_HOST)}")
-print(f"  POSTGRES_DB type: {type(POSTGRES_DB)}")
-print(f"  POSTGRES_USER type: {type(POSTGRES_USER)}")
+
+
 
 # ''' CHOICES '''
 AUTHENTIFICATION_STATUS = [
@@ -39,7 +28,7 @@ configure_logging(logging.INFO)
 log = logging.getLogger(__name__)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
+print("=== TESTING SETTINGS ===")
 
 if not SECRET_KEY:
     text_e = "SECRET_KEY must be set in environment variables"
