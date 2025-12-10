@@ -13,7 +13,7 @@ SECRET_KEY = SECRET_KEY_DJ
 
 # '''CORS'''
 # False - this value is default and it's means what the server don't accept from other sources.
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 # Here, we allow the URL list for publicated
 CORS_ALLOWED_ORIGINS = [
     f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
