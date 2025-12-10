@@ -71,6 +71,7 @@ jobs:
                 env:
                     SMTP_PORT: 465
                     DJANGO_ENV: "production"
+                    ENGINE: "django.db.backends.postgresql"
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
                     IS_DEBUG: 0
@@ -82,6 +83,7 @@ jobs:
                     SMTP_PORT: 465
                     DJANGO_ENV: "production"
                     IS_DEBUG: 0
+                    ENGINE: "django.db.backends.postgresql"
                     SECRET_KEY_DJ: ${{ secrets.DJANGO_SECRET_KEY }}
                     SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
                     POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
