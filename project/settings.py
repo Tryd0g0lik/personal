@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from django.utils.translation import gettext_lazy as _
 from project.settings_conf.settings_db import *
+from project.settings_conf.settings_options import *
 
 
 

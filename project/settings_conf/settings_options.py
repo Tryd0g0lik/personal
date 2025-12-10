@@ -71,4 +71,4 @@ WAGTAIL_SITE_NAME = "PERSON_PROFILE"
 WAGTAILSEARCH_BACKENDS = {
     "default": {"BACKEND": "wagtail.search.backends.elasticsearch8", "INDEX": "myapp"}
 }
-WAGTAILADMIN_BASE_URL = "http://83.166.245.209:8000"
+WAGTAILADMIN_BASE_URL = f"http://{POSTGRES_HOST}:{APP_PORT}"
