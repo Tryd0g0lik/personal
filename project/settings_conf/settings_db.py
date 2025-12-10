@@ -39,8 +39,19 @@ def get_allowed_hosts(allowed_hosts: str):
         log.error(text_e)
         raise ImproperlyConfigured(text_e)
     return hosts
-
-
+print("=======settings_db.py=================")
+print("=== DATABASE CONFIGURATION DEBUG ===")
+print(f"DJANGO_ENV: {DJANGO_ENV}")
+print(f"DEBUG: {DEBUG}")
+print(f"IS_DEBUG: {IS_DEBUG}")
+print(f"POSTGRES_HOST: {POSTGRES_HOST}")
+print(f"POSTGRES_DB: {POSTGRES_DB}")
+print(f"POSTGRES_USER: {POSTGRES_USER}")
+print(f"POSTGRES_PORT: {POSTGRES_PORT}")
+print(f"Database variables type check:")
+print(f"  POSTGRES_HOST type: {type(POSTGRES_HOST)}")
+print(f"  POSTGRES_DB type: {type(POSTGRES_DB)}")
+print(f"  POSTGRES_USER type: {type(POSTGRES_USER)}")
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 ALLOWED_HOSTS = get_allowed_hosts("127.0.0.1, localhost")
