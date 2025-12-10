@@ -16,8 +16,7 @@ log = logging.getLogger(__name__)
 CORS_ORIGIN_ALLOW_ALL = False
 # Here, we allow the URL list for publicated
 CORS_ALLOWED_ORIGINS = [
-    f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
-    f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
+    f"http://{POSTGRES_HOST}:{APP_PORT}",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
@@ -26,9 +25,7 @@ CORS_ALLOWED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
 # This is list from private of URL
 CSRF_TRUSTED_ORIGINS = [
-
-    f"http://{DB_TO_RADIS_HOST}:{APP_PORT}",
-    f"http://{DB_TO_RADIS_HOST}:{DB_TO_RADIS_PORT}",
+    f"http://{POSTGRES_HOST}:{APP_PORT}",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]

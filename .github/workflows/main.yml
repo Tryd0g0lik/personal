@@ -14,6 +14,8 @@ jobs:
             POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_PORT: ${{ secrets.POSTGRES_DB_PORT }}
             POSTGRES_HOST: ${{ secrets.POSTGRES_DB_HOST }}
+            DB_TO_RADIS_HOST: ${{ secrets.POSTGRES_DB_HOST }}
+            APP_PORT: 8000
             IS_DEBUG: 0
             DJANGO_ENV: "production"
             DATABASE_URL: "postgresql://${{  secrets.POSTGRES_DB_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ secrets.POSTGRES_DB_HOST }}:${{ secrets.POSTGRES_DB_PORT }}/${{ secrets.POSTGRES_DB  }}"
