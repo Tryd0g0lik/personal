@@ -95,7 +95,14 @@ jobs:
                     POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
                     DATABASE_URL: ${{ env.DATABASE_URL }}
                 run: |
-                    python ./manage.py makemigrations
+                    echo "=== Running migrations ==="
+                    python manage.py makemigrations --dry-run
+                    python manage.py makemigrations
+                    python manage.py migrate
+                    python manage.py showmigrations
+            -   name: Run collectstatic
+                run: |
+                    python ./manage.py collectstatic --clear --noinput
 
             -   name: Run migrate
                 env:
