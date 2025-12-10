@@ -82,7 +82,7 @@ else:
     # PRODUCTION
     DATABASES = {
         "default": {
-            "ENGINE": f"django.db.backends.postgresql",
+            "ENGINE": "django.db.backends.postgresql",
             "NAME": f"{POSTGRES_DB}",
             "USER": f"{POSTGRES_USER}",
             "PASSWORD": f"{POSTGRES_PASSWORD}",
