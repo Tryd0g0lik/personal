@@ -32,7 +32,7 @@ class AuthenticationMiddleware:
                     request.user = u_list.first()
             if token_user and token_user == "refresh_token":
                 # ==== REFRESH TOKEN
-                pass
+                print("Needs to be add the 'refresh_token'")
             request.__setattr__("status_code", status.HTTP_200_OK)
             return self.get_response(request)
         except Exception as error:

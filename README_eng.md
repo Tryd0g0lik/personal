@@ -2,7 +2,7 @@
 
 ## Access table of role
 
-What did i make for users:
+What i made for users:
 - permissions & roles were separeted by: - "`staff`", "`admin`", "`user`", "`visitor`", "`superuser`";
 - "`login`" function of authorisation;
 - "`logout`" function of logout;
